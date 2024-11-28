@@ -4,7 +4,6 @@ import retrofit2.Call;
 import retrofit2.http.GET;
 
 public interface PokemonApiService {
-    @GET("pokemon?limit=10")
-    //<PokemonResponse>
+    @GET("pokemon?limit=100")
     Call<PokemonResponse> getPokemonList();
 }
