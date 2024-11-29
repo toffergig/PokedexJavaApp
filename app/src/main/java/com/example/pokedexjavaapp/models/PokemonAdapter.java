@@ -12,6 +12,7 @@ import com.example.pokedexjavaapp.R;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
+import java.util.Locale;
 
 public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonViewHolder> {
 
@@ -32,11 +33,19 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
     @Override
     public void onBindViewHolder(@NonNull PokemonViewHolder holder, int position) {
         Pokemon pokemon = pokemonList.get(position);
+        //holder.pokemonNameTextView.setText(pokemon.getName());
+
+        // Display ID, name, and sprite
+        pokemon.extractIdAndSpriteURL(); // Extract ID and sprite URL
+        String formattedId = String.format(Locale.getDefault(), "%03d", pokemon.getId()); // Format to 3 digits with locale
+        holder.pokemonIdTextView.setText(formattedId);
         holder.pokemonNameTextView.setText(pokemon.getName());
+        Picasso.get().load(pokemon.getSpriteURL()).into(holder.pokemonSpriteImageView);
 
         // Load the sprite image using Picasso
-        pokemon.extractSpriteURL();  // Extract the sprite URL
-        Picasso.get().load(pokemon.getSpriteURL()).into(holder.pokemonSpriteImageView);
+//        pokemon.extractSpriteURL();  // Extract the sprite URL
+//        holder.pokemonIdTextView.setText(String.valueOf(pokemon.getId())); // Display ID
+//        Picasso.get().load(pokemon.getSpriteURL()).into(holder.pokemonSpriteImageView);
     }
 
     @Override
@@ -51,11 +60,13 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
     }
 
     static class PokemonViewHolder extends RecyclerView.ViewHolder {
+        TextView pokemonIdTextView;
         ImageView pokemonSpriteImageView;
         TextView pokemonNameTextView;
 
         public PokemonViewHolder(@NonNull View itemView) {
             super(itemView);
+            pokemonIdTextView = itemView.findViewById(R.id.pokemon_id_text_view);
             pokemonNameTextView = itemView.findViewById(R.id.pokemon_name_text_view);
             pokemonSpriteImageView = itemView.findViewById(R.id.pokemon_sprite_image_view); // Initialize ImageView
         }

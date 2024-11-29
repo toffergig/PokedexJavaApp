@@ -6,8 +6,16 @@ public class Pokemon {
     private String name;
     private String url;
     private String spriteURL;
+    private int id; // Add an ID field
 
-    // Getters
+    // Getters and Setters
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
     public String getName() {
         return name;
     }
@@ -21,10 +29,15 @@ public class Pokemon {
         this.spriteURL = spriteURL;
     }
 
-    public void extractSpriteURL() {
-        // Assuming the URL format is: https://pokeapi.co/api/v2/pokemon/{id or name}/
+    public void extractIdAndSpriteURL() {
+        // Assuming the URL format is: https://pokeapi.co/api/v2/pokemon/{id}/
         String[] parts = url.split("/");
-        String idOrName = parts[parts.length - 1];
-        spriteURL = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + idOrName + ".png";
+        try {
+            id = Integer.parseInt(parts[parts.length - 1]); // Extract ID
+        } catch (NumberFormatException e) {
+            // Handle the case where the ID is not a number
+            id = -1; // Or some other default value
+        }
+        spriteURL = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/" + id + ".png";
     }
 }
