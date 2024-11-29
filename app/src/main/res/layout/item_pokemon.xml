@@ -10,6 +10,13 @@
         card_view:cardCornerRadius="8dp"
         card_view:cardElevation="4dp">
 
+    <ImageView
+        android:id="@+id/pokemon_sprite_image_view"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:layout_gravity="center_horizontal"
+        android:contentDescription="TODO" />
+
     <TextView
         android:id="@+id/pokemon_name_text_view"
         android:layout_width="match_parent"

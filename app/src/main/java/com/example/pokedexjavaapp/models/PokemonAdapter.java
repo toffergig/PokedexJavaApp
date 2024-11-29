@@ -3,11 +3,13 @@ package com.example.pokedexjavaapp.models;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.pokedexjavaapp.R;
+import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
@@ -31,6 +33,10 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
     public void onBindViewHolder(@NonNull PokemonViewHolder holder, int position) {
         Pokemon pokemon = pokemonList.get(position);
         holder.pokemonNameTextView.setText(pokemon.getName());
+
+        // Load the sprite image using Picasso
+        pokemon.extractSpriteURL();  // Extract the sprite URL
+        Picasso.get().load(pokemon.getSpriteURL()).into(holder.pokemonSpriteImageView);
     }
 
     @Override
@@ -45,11 +51,13 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
     }
 
     static class PokemonViewHolder extends RecyclerView.ViewHolder {
+        ImageView pokemonSpriteImageView;
         TextView pokemonNameTextView;
 
         public PokemonViewHolder(@NonNull View itemView) {
             super(itemView);
             pokemonNameTextView = itemView.findViewById(R.id.pokemon_name_text_view);
+            pokemonSpriteImageView = itemView.findViewById(R.id.pokemon_sprite_image_view); // Initialize ImageView
         }
     }
 }
