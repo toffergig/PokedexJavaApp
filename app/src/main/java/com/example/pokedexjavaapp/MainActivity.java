@@ -29,9 +29,9 @@ public class MainActivity extends AppCompatActivity {
     private EndlessRecyclerViewScrollListener scrollListener;
     private GridLayoutManager gridLayoutManager;
 
-    private static final int PAGE_SIZE = 20; // Number of items to load per page
+    private static final int PAGE_SIZE = 24; // Number of items to load per page
     private int offset = 0; // Current offset
-    private int totalItemCount = -1;
+    //private int totalItemCount = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,8 +45,11 @@ public class MainActivity extends AppCompatActivity {
         pokemonRecyclerView = findViewById(R.id.pokemon_recycler_view);
         gridLayoutManager = new GridLayoutManager(this, 2);
         pokemonRecyclerView.setLayoutManager(gridLayoutManager);
+
+        // Initialize repository
         pokemonRepository = new PokemonRepository(getApplicationContext());
 
+        // Initialize adapter
         pokemonAdapter = new PokemonAdapter(pokemonList, pokemon -> {
             Intent intent = new Intent(MainActivity.this, PokemonDetailsActivity.class);
             intent.putExtra("pokemon_id", pokemon.getId());
@@ -67,9 +70,6 @@ public class MainActivity extends AppCompatActivity {
 
         pokemonRecyclerView.addOnScrollListener(scrollListener);
 
-        // Initialize repository
-        pokemonRepository = new PokemonRepository(getApplicationContext());
-
         fetchPokemonData(offset);
     }
 
@@ -81,18 +81,24 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(List<PokemonEntity> pokemons, int totalCount) {
                 showLoadingIndicator(false);
 
-                if (totalItemCount == -1) {
-                    totalItemCount = totalCount;
-                }
-
-                pokemonList.addAll(pokemons);
-                pokemonAdapter.notifyDataSetChanged();
-
-                MainActivity.this.offset = pokemonList.size();
-
-                if (pokemonList.size() >= totalItemCount) {
+                // If we received no new data, we've reached the end
+                if (pokemons.isEmpty()) {
                     pokemonRecyclerView.removeOnScrollListener(scrollListener);
+                    return;
                 }
+
+                // Add new Pokémon to the list without duplicates
+                int initialSize = pokemonList.size();
+                for (PokemonEntity pokemon : pokemons) {
+                    if (!pokemonList.contains(pokemon)) {
+                        pokemonList.add(pokemon);
+                    }
+                }
+
+                pokemonAdapter.notifyItemRangeInserted(initialSize, pokemonList.size() - initialSize);
+
+                // Update offset based on the number of new Pokémon received
+                MainActivity.this.offset += pokemons.size();
             }
 
             @Override

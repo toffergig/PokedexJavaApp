@@ -1,6 +1,8 @@
 package com.example.pokedexjavaapp.repository;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 
 import androidx.annotation.NonNull;
 
@@ -11,20 +13,21 @@ import com.example.pokedexjavaapp.database.AppDatabase;
 import com.example.pokedexjavaapp.database.PokemonDao;
 import com.example.pokedexjavaapp.models.PokemonEntity;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import android.os.Handler;
-import android.os.Looper;
+
 public class PokemonRepository {
 
     private PokemonApiService apiService;
     private PokemonDao pokemonDao;
-    private boolean isLoading = false;
+    private AtomicBoolean isLoading = new AtomicBoolean(false);
     private ExecutorService executorService;
 
     public interface PokemonListCallback {
@@ -36,47 +39,76 @@ public class PokemonRepository {
         apiService = RetrofitClient.getPokemonApiService();
         AppDatabase database = AppDatabase.getInstance(context);
         pokemonDao = database.pokemonDao();
-        // Initialize ExecutorService
         executorService = Executors.newSingleThreadExecutor();
     }
 
     public void getPokemonList(int limit, int offset, final PokemonListCallback callback) {
         executorService.execute(() -> {
-            List<PokemonEntity> pokemons = pokemonDao.getPokemons(limit, offset);
-            int totalCount = pokemonDao.getCount();
+            List<PokemonEntity> cachedPokemons = pokemonDao.getPokemons(limit, offset);
+            int cachedCount = cachedPokemons != null ? cachedPokemons.size() : 0;
 
-            if (pokemons != null && !pokemons.isEmpty()) {
-                // Post result back to main thread
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    callback.onSuccess(pokemons, totalCount);
+            if (cachedCount < limit) {
+                // Fetch missing data from API
+                int apiLimit = limit - cachedCount;
+                int apiOffset = offset + cachedCount;
+
+                fetchFromApi(apiLimit, apiOffset, new PokemonListCallback() {
+                    @Override
+                    public void onSuccess(List<PokemonEntity> apiPokemons, int apiTotalCount) {
+                        // Save new data to database
+                        saveToDatabase(apiPokemons);
+
+                        // Combine cached data and API data
+                        List<PokemonEntity> combinedPokemons = new ArrayList<>();
+                        if (cachedPokemons != null) {
+                            combinedPokemons.addAll(cachedPokemons);
+                        }
+                        combinedPokemons.addAll(apiPokemons);
+
+                        // Return combined data
+                        new Handler(Looper.getMainLooper()).post(() -> {
+                            callback.onSuccess(combinedPokemons, apiTotalCount);
+                        });
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+                        // Return cached data if available
+                        if (cachedPokemons != null && !cachedPokemons.isEmpty()) {
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                callback.onSuccess(cachedPokemons, cachedPokemons.size());
+                            });
+                        } else {
+                            new Handler(Looper.getMainLooper()).post(() -> {
+                                callback.onError(t);
+                            });
+                        }
+                    }
                 });
             } else {
-                // Fetch from API
-                fetchFromApi(limit, offset, callback);
+                // Cached data is sufficient
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    callback.onSuccess(cachedPokemons, cachedPokemons.size());
+                });
             }
         });
     }
 
     private void fetchFromApi(int limit, int offset, final PokemonListCallback callback) {
-        if (isLoading) return;
-        isLoading = true;
+        if (!isLoading.compareAndSet(false, true)) {
+            return;
+        }
 
         apiService.getPokemonList(limit, offset).enqueue(new Callback<PokemonResponse>() {
             @Override
             public void onResponse(@NonNull Call<PokemonResponse> call, @NonNull Response<PokemonResponse> response) {
-                isLoading = false;
+                isLoading.set(false);
                 if (response.isSuccessful() && response.body() != null) {
                     List<PokemonEntity> pokemonList = response.body().toPokemonEntityList();
                     int totalCount = response.body().getCount();
 
-                    // Save to database
-                    saveToDatabase(pokemonList);
-
-                    // Return result to callback on the main thread
-                    new Handler(Looper.getMainLooper()).post(() -> {
-                        callback.onSuccess(pokemonList, totalCount);
-                    });
-
+                    // Return data via callback
+                    callback.onSuccess(pokemonList, totalCount);
                 } else {
                     callback.onError(new Exception("API call failed with response"));
                 }
@@ -84,25 +116,12 @@ public class PokemonRepository {
 
             @Override
             public void onFailure(@NonNull Call<PokemonResponse> call, @NonNull Throwable t) {
-                isLoading = false;
+                isLoading.set(false);
                 callback.onError(t);
             }
         });
     }
 
-
-    // Helper class to hold the result
-    private static class FetchResult {
-        List<PokemonEntity> pokemons;
-        int totalCount;
-
-        FetchResult(List<PokemonEntity> pokemons, int totalCount) {
-            this.pokemons = pokemons;
-            this.totalCount = totalCount;
-        }
-    }
-
-    // AsyncTask to save data to the database
     private void saveToDatabase(List<PokemonEntity> pokemonList) {
         executorService.execute(() -> {
             pokemonDao.insertAll(pokemonList);
