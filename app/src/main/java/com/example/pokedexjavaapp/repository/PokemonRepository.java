@@ -1,6 +1,7 @@
 package com.example.pokedexjavaapp.repository;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Handler;
 import android.os.Looper;
 
@@ -9,10 +10,11 @@ import androidx.annotation.NonNull;
 import com.example.pokedexjavaapp.api.PokemonApiService;
 import com.example.pokedexjavaapp.api.PokemonResponse;
 import com.example.pokedexjavaapp.api.RetrofitClient;
-import com.example.pokedexjavaapp.database.AppDatabase;
-import com.example.pokedexjavaapp.database.PokemonDao;
 import com.example.pokedexjavaapp.models.PokemonEntity;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -26,9 +28,14 @@ import retrofit2.Response;
 public class PokemonRepository {
 
     private PokemonApiService apiService;
-    private PokemonDao pokemonDao;
+    private SharedPreferences sharedPreferences;
+    private Gson gson;
+    private static final String PREFS_NAME = "pokemon_prefs";
+    private static final String POKEMON_LIST_KEY = "pokemon_list_key";
     private AtomicBoolean isLoading = new AtomicBoolean(false);
     private ExecutorService executorService;
+    private Context context;
+    private static final String POKEMON_PAGE_KEY_PREFIX = "pokemon_page_";
 
     public interface PokemonListCallback {
         void onSuccess(List<PokemonEntity> pokemons, int totalCount);
@@ -36,16 +43,17 @@ public class PokemonRepository {
     }
 
     public PokemonRepository(Context context) {
+        this.context = context;
         apiService = RetrofitClient.getPokemonApiService();
-        AppDatabase database = AppDatabase.getInstance(context);
-        pokemonDao = database.pokemonDao();
+        sharedPreferences = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        gson = new Gson();
         executorService = Executors.newSingleThreadExecutor();
     }
 
     public void getPokemonList(int limit, int offset, final PokemonListCallback callback) {
         executorService.execute(() -> {
-            List<PokemonEntity> cachedPokemons = pokemonDao.getPokemons(limit, offset);
-            int cachedCount = cachedPokemons != null ? cachedPokemons.size() : 0;
+            List<PokemonEntity> cachedPokemons = getCachedPokemons(limit, offset);
+            int cachedCount = cachedPokemons.size();
 
             if (cachedCount < limit) {
                 // Fetch missing data from API
@@ -55,14 +63,11 @@ public class PokemonRepository {
                 fetchFromApi(apiLimit, apiOffset, new PokemonListCallback() {
                     @Override
                     public void onSuccess(List<PokemonEntity> apiPokemons, int apiTotalCount) {
-                        // Save new data to database
-                        saveToDatabase(apiPokemons);
+                        // Save new data to cache
+                        saveToCache(apiPokemons);
 
                         // Combine cached data and API data
-                        List<PokemonEntity> combinedPokemons = new ArrayList<>();
-                        if (cachedPokemons != null) {
-                            combinedPokemons.addAll(cachedPokemons);
-                        }
+                        List<PokemonEntity> combinedPokemons = new ArrayList<>(cachedPokemons);
                         combinedPokemons.addAll(apiPokemons);
 
                         // Return combined data
@@ -74,7 +79,7 @@ public class PokemonRepository {
                     @Override
                     public void onError(Throwable t) {
                         // Return cached data if available
-                        if (cachedPokemons != null && !cachedPokemons.isEmpty()) {
+                        if (!cachedPokemons.isEmpty()) {
                             new Handler(Looper.getMainLooper()).post(() -> {
                                 callback.onSuccess(cachedPokemons, cachedPokemons.size());
                             });
@@ -91,6 +96,45 @@ public class PokemonRepository {
                     callback.onSuccess(cachedPokemons, cachedPokemons.size());
                 });
             }
+        });
+    }
+
+
+
+    private List<PokemonEntity> getCachedPokemons(int limit, int offset) {
+        String json = sharedPreferences.getString(POKEMON_LIST_KEY, null);
+        if (json != null) {
+            Type listType = new TypeToken<List<PokemonEntity>>() {}.getType();
+            List<PokemonEntity> allPokemons = gson.fromJson(json, listType);
+            int end = Math.min(offset + limit, allPokemons.size());
+            if (offset < end) {
+                return allPokemons.subList(offset, end);
+            }
+        }
+        return new ArrayList<>();
+    }
+
+    private void saveToCache(List<PokemonEntity> newPokemons) {
+        executorService.execute(() -> {
+            String json = sharedPreferences.getString(POKEMON_LIST_KEY, null);
+            List<PokemonEntity> allPokemons;
+            if (json != null) {
+                Type listType = new TypeToken<List<PokemonEntity>>() {}.getType();
+                allPokemons = gson.fromJson(json, listType);
+            } else {
+                allPokemons = new ArrayList<>();
+            }
+
+            // Avoid duplicates
+            for (PokemonEntity pokemon : newPokemons) {
+                if (!allPokemons.contains(pokemon)) {
+                    allPokemons.add(pokemon);
+                }
+            }
+
+            // Save updated list back to SharedPreferences
+            String updatedJson = gson.toJson(allPokemons);
+            sharedPreferences.edit().putString(POKEMON_LIST_KEY, updatedJson).apply();
         });
     }
 
@@ -122,15 +166,23 @@ public class PokemonRepository {
         });
     }
 
-    private void saveToDatabase(List<PokemonEntity> pokemonList) {
-        executorService.execute(() -> {
-            pokemonDao.insertAll(pokemonList);
-        });
-    }
+//    public void shutdown() {
+//        if (!executorService.isShutdown()) {
+//            executorService.shutdown();
+//        }
+//    }
 
-    public void shutdown() {
-        if (!executorService.isShutdown()) {
-            executorService.shutdown();
-        }
-    }
+//    private List<PokemonEntity> getCachedPage(int pageNumber) {
+//        String json = sharedPreferences.getString(POKEMON_PAGE_KEY_PREFIX + pageNumber, null);
+//        if (json != null) {
+//            Type listType = new TypeToken<List<PokemonEntity>>() {}.getType();
+//            return gson.fromJson(json, listType);
+//        }
+//        return new ArrayList<>();
+//    }
+//
+//    private void savePageToCache(int pageNumber, List<PokemonEntity> pokemons) {
+//        String json = gson.toJson(pokemons);
+//        sharedPreferences.edit().putString(POKEMON_PAGE_KEY_PREFIX + pageNumber, json).apply();
+//    }
 }

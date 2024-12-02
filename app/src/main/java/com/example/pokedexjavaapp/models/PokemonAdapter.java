@@ -1,5 +1,7 @@
 package com.example.pokedexjavaapp.models;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,8 +60,16 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
     }
 
     public void updatePokemonList(List<PokemonEntity> newPokemonList) {
-        pokemonList.addAll(newPokemonList);
-        notifyDataSetChanged();
+        int initialSize = pokemonList.size();
+        for (PokemonEntity pokemon : newPokemonList) {
+            if (!pokemonList.contains(pokemon)) {
+                pokemonList.add(pokemon);
+            }
+        }
+        int addedCount = pokemonList.size() - initialSize;
+        if (addedCount > 0) {
+            notifyItemRangeInserted(initialSize, addedCount);
+        }
     }
 
     static class PokemonViewHolder extends RecyclerView.ViewHolder {

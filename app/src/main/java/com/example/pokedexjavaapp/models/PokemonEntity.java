@@ -1,53 +1,42 @@
 package com.example.pokedexjavaapp.models;
 
-import androidx.room.Entity;
-import androidx.room.PrimaryKey;
+import com.google.gson.annotations.SerializedName;
 
-@Entity(tableName = "pokemon_table")
-public class PokemonEntity {
+import java.io.Serializable;
+import java.util.Objects;
 
-    @PrimaryKey
+public class PokemonEntity implements Serializable {
     private int id;
     private String name;
+
+    @SerializedName("spriteURL")
     private String spriteURL;
 
-    // Constructors
-    public PokemonEntity() {
-        // Default constructor required for Room
-    }
-
+    // Constructor
     public PokemonEntity(int id, String name, String spriteURL) {
         this.id = id;
         this.name = name;
         this.spriteURL = spriteURL;
     }
 
-    // Getters and Setters
+    // Getters
+    public int getId() { return id; }
+    public String getName() { return name; }
+    public String getSpriteURL() { return spriteURL; }
 
-    // Getter and Setter for 'id'
-    public int getId() {
-        return id;
+    // Override equals and hashCode for proper comparison
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        PokemonEntity that = (PokemonEntity) o;
+
+        return id == that.id;
     }
 
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    // Getter and Setter for 'name'
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    // Getter and Setter for 'spriteURL'
-    public String getSpriteURL() {
-        return spriteURL;
-    }
-
-    public void setSpriteURL(String spriteURL) {
-        this.spriteURL = spriteURL;
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

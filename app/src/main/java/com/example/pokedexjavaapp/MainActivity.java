@@ -2,7 +2,6 @@ package com.example.pokedexjavaapp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -21,71 +20,86 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    // Constants
     private static final String TAG = "MainActivity";
+    private static final int PAGE_SIZE = 10;
+    private static final int GRID_COLUMN_COUNT = 2;
+
+    // UI Components
     private RecyclerView pokemonRecyclerView;
-    private PokemonAdapter pokemonAdapter;
-    private List<PokemonEntity> pokemonList = new ArrayList<>();
     private ProgressBar progressBar;
 
+    // Data Components
+    private PokemonAdapter pokemonAdapter;
     private PokemonRepository pokemonRepository;
     private EndlessRecyclerViewScrollListener scrollListener;
-    private GridLayoutManager gridLayoutManager;
 
-    private static final int PAGE_SIZE = 10; // Number of items to load per page
-    private int offset = 0; // Current offset
-    //private int totalItemCount = -1;
-
-    private boolean keep = true;
-    private final int DELAY = 2250;
+    // State Variables
+    private int offset = 0;
+    private boolean isDataReady = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Show splash screen and prefetch data
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
+        splashScreen.setKeepOnScreenCondition(() -> !isDataReady);
+
         setContentView(R.layout.activity_main);
 
+        initializeUIComponents();
+        initializeDataComponents();
+        prefetchPokemonData();
+    }
 
-        splashScreen.setKeepOnScreenCondition(() -> keep);
-        Handler handler = new Handler();
-        handler.postDelayed(() -> keep = false, DELAY);
+    private void prefetchPokemonData() {
+        pokemonRepository = new PokemonRepository(getApplicationContext());
+        pokemonRepository.getPokemonList(PAGE_SIZE, offset, new PokemonRepository.PokemonListCallback() {
+            @Override
+            public void onSuccess(List<PokemonEntity> pokemons, int totalCount) {
+                isDataReady = true;
+                offset += pokemons.size();
 
+                // Update the RecyclerView adapter with the prefetched data
+                pokemonAdapter.updatePokemonList(pokemons);
+            }
 
-    // Initialize ProgressBar
+            @Override
+            public void onError(Throwable t) {
+                isDataReady = true; // Let the app continue even if there's an error
+                Log.e(TAG, "Prefetch API call failed: " + t.getMessage());
+            }
+        });
+    }
+
+    private void initializeUIComponents() {
+        // Initialize ProgressBar
         progressBar = findViewById(R.id.progress_bar);
 
         // Initialize RecyclerView
         pokemonRecyclerView = findViewById(R.id.pokemon_recycler_view);
-        gridLayoutManager = new GridLayoutManager(this, 2);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(this, GRID_COLUMN_COUNT);
         pokemonRecyclerView.setLayoutManager(gridLayoutManager);
 
-        // Initialize repository
-        pokemonRepository = new PokemonRepository(getApplicationContext());
-
-        // Initialize adapter
-        pokemonAdapter = new PokemonAdapter(pokemonList, pokemon -> {
-            Intent intent = new Intent(MainActivity.this, PokemonDetailsActivity.class);
-            intent.putExtra("pokemon_id", pokemon.getId());
-            intent.putExtra("pokemon_name", pokemon.getName());
-            intent.putExtra("pokemon_sprite_url", pokemon.getSpriteURL());
-            startActivity(intent);
-        });
-
+        // Initialize Adapter with an empty list
+        pokemonAdapter = new PokemonAdapter(new ArrayList<>(), this::openPokemonDetails);
         pokemonRecyclerView.setAdapter(pokemonAdapter);
 
         // Initialize the scroll listener
         scrollListener = new EndlessRecyclerViewScrollListener(gridLayoutManager) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                fetchPokemonData(offset);
+                fetchPokemonData();
             }
         };
-
         pokemonRecyclerView.addOnScrollListener(scrollListener);
-
-        fetchPokemonData(offset);
     }
 
-    private void fetchPokemonData(int offset) {
+    private void initializeDataComponents() {
+        pokemonRepository = new PokemonRepository(getApplicationContext());
+    }
+
+    private void fetchPokemonData() {
         showLoadingIndicator(true);
 
         pokemonRepository.getPokemonList(PAGE_SIZE, offset, new PokemonRepository.PokemonListCallback() {
@@ -93,24 +107,16 @@ public class MainActivity extends AppCompatActivity {
             public void onSuccess(List<PokemonEntity> pokemons, int totalCount) {
                 showLoadingIndicator(false);
 
-                // If we received no new data, we've reached the end
                 if (pokemons.isEmpty()) {
                     pokemonRecyclerView.removeOnScrollListener(scrollListener);
                     return;
                 }
 
-                // Add new Pokémon to the list without duplicates
-                int initialSize = pokemonList.size();
-                for (PokemonEntity pokemon : pokemons) {
-                    if (!pokemonList.contains(pokemon)) {
-                        pokemonList.add(pokemon);
-                    }
-                }
+                // Update the adapter with new data
+                pokemonAdapter.updatePokemonList(pokemons);
 
-                pokemonAdapter.notifyItemRangeInserted(initialSize, pokemonList.size() - initialSize);
-
-                // Update offset based on the number of new Pokémon received
-                MainActivity.this.offset += pokemons.size();
+                // Update offset for the next data fetch
+                offset += pokemons.size();
             }
 
             @Override
@@ -121,17 +127,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void showLoadingIndicator(boolean show) {
-        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+    private void openPokemonDetails(PokemonEntity pokemon) {
+        Intent intent = new Intent(MainActivity.this, PokemonDetailsActivity.class);
+        intent.putExtra("pokemon_id", pokemon.getId());
+        intent.putExtra("pokemon_name", pokemon.getName());
+        intent.putExtra("pokemon_sprite_url", pokemon.getSpriteURL());
+        startActivity(intent);
     }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        // Shutdown the ExecutorService
-        if (pokemonRepository != null) {
-            pokemonRepository.shutdown();
-        }
+    private void showLoadingIndicator(boolean show) {
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
     }
 }
