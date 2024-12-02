@@ -7,7 +7,7 @@ import android.content.Context;
 
 import com.example.pokedexjavaapp.models.PokemonEntity;
 
-@Database(entities = {PokemonEntity.class}, version = 1)
+@Database(entities = {PokemonEntity.class}, version = 1, exportSchema = false)
 public abstract class AppDatabase extends RoomDatabase {
 
     public abstract PokemonDao pokemonDao();

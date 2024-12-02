@@ -2,11 +2,13 @@ package com.example.pokedexjavaapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.splashscreen.SplashScreen;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -29,16 +31,26 @@ public class MainActivity extends AppCompatActivity {
     private EndlessRecyclerViewScrollListener scrollListener;
     private GridLayoutManager gridLayoutManager;
 
-    private static final int PAGE_SIZE = 24; // Number of items to load per page
+    private static final int PAGE_SIZE = 10; // Number of items to load per page
     private int offset = 0; // Current offset
     //private int totalItemCount = -1;
+
+    private boolean keep = true;
+    private final int DELAY = 2250;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
         setContentView(R.layout.activity_main);
 
-        // Initialize ProgressBar
+
+        splashScreen.setKeepOnScreenCondition(() -> keep);
+        Handler handler = new Handler();
+        handler.postDelayed(() -> keep = false, DELAY);
+
+
+    // Initialize ProgressBar
         progressBar = findViewById(R.id.progress_bar);
 
         // Initialize RecyclerView
