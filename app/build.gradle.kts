@@ -42,10 +42,11 @@ dependencies {
     implementation (libs.gson)
     implementation(libs.cardview)
     implementation (libs.recyclerview)
+    implementation(libs.swiperefreshlayout)
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation (libs.picasso)
-    implementation(libs.androidx.core.splashscreen)
+    implementation(libs.core.splashscreen)
     implementation (libs.mpandroidchart)
 }
