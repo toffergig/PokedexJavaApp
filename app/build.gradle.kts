@@ -46,5 +46,6 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation (libs.picasso)
-    implementation(libs.core.splashscreen)
+    implementation(libs.androidx.core.splashscreen)
+    implementation (libs.mpandroidchart)
 }
