@@ -8,6 +8,7 @@
     android:padding="10dp"
     tools:context=".PokemonDetailsActivity">
 
+    <!-- ProgressBar -->
     <ProgressBar
         android:id="@+id/progress_bar"
         style="?android:attr/progressBarStyleLarge"
@@ -19,59 +20,144 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"/>
 
+    <!-- Pokemon Image -->
+
+    <!-- Pokemon ID -->
+
+    <!-- Pokemon Name -->
+
+    <!-- Barrier for image and name -->
+
     <ImageView
         android:id="@+id/pokemon_detail_image"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
-        android:layout_marginTop="20dp"
+        android:layout_width="140dp"
+        android:layout_height="140dp"
+        android:layout_marginTop="12dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintHorizontal_bias="0.031"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id= "@+id/pokemon_detail_id"
+        android:id="@+id/pokemon_detail_id"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="36dp"
         android:text=""
+        android:textSize="18sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pokemon_detail_image" />
+        app:layout_constraintHorizontal_bias="0.348"
+        app:layout_constraintStart_toEndOf="@id/pokemon_detail_image"
+        app:layout_constraintTop_toTopOf="@id/pokemon_detail_image" />
 
     <TextView
         android:id="@+id/pokemon_detail_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginStart="16dp"
         android:text=""
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/pokemon_detail_image"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintHorizontal_bias="0.354"
+        app:layout_constraintStart_toEndOf="@id/pokemon_detail_image"
+        app:layout_constraintTop_toBottomOf="@+id/pokemon_detail_id"
+        app:layout_constraintVertical_bias="0.203" />
+
+    <androidx.constraintlayout.widget.Barrier
+        android:id="@+id/image_name_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="bottom"
+        app:constraint_referenced_ids="pokemon_detail_image,pokemon_detail_name" />
+
+    <!-- Pokemon Types -->
+
+    <!-- 'Base Stats' Label -->
+
+    <!-- Abilities Layout -->
+
+    <!-- Radar Chart -->
+    <!-- Abilities Layout -->
+
+    <LinearLayout
+        android:id="@+id/pokemon_abilities_layout"
+        android:layout_width="155dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="#E9E9E9"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintEnd_toStartOf="@id/pokemon_types_layout"
+        app:layout_constraintHorizontal_bias="0.055"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pokemon_detail_id" />
+        app:layout_constraintTop_toBottomOf="@id/image_name_barrier">
+
+
+        <!-- Abilities Label -->
+        <TextView
+            android:id="@+id/abilities_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:text="ABILITIES"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/pokemon_types_layout"
+        android:layout_width="155dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="#00FFFFFF"
+        android:orientation="vertical"
+        android:padding="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/pokemon_abilities_layout"
+        app:layout_constraintTop_toBottomOf="@id/image_name_barrier">
+
+        <!-- Types Label -->
+        <TextView
+            android:id="@+id/types_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:gravity="center"
+            android:text="TYPES"
+            android:textColor="#000000"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Types will be added programmatically here -->
+    </LinearLayout>
+
 
     <TextView
         android:id="@+id/textView4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="Base Stats"
+        android:layout_marginTop="64dp"
+        android:text="BASE STATS"
+        android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/pokemon_detail_name" />
+        app:layout_constraintTop_toBottomOf="@id/pokemon_types_layout" />
 
     <com.github.mikephil.charting.charts.RadarChart
         android:id="@+id/radar_chart"
-        android:layout_width="434dp"
-        android:layout_height="375dp"
+        android:layout_width="389dp"
+        android:layout_height="396dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.466"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView4"
-        app:layout_constraintVertical_bias="0.647" />
+        app:layout_constraintTop_toBottomOf="@id/textView4"
+        app:layout_constraintVertical_bias="1.0" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

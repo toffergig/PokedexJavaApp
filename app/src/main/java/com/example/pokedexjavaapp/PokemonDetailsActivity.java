@@ -1,10 +1,13 @@
 package com.example.pokedexjavaapp;
 
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
@@ -36,6 +39,8 @@ public class PokemonDetailsActivity extends AppCompatActivity {
     private TextView pokemonIdTextView;
     private RadarChart radarChart;
     private ProgressBar progressBar;
+    private LinearLayout pokemonTypesLayout; // Added
+    private LinearLayout pokemonAbilitiesLayout; // Added
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +61,8 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         pokemonIdTextView = findViewById(R.id.pokemon_detail_id);
         radarChart = findViewById(R.id.radar_chart);
         progressBar = findViewById(R.id.progress_bar);
+        pokemonTypesLayout = findViewById(R.id.pokemon_types_layout); // Added
+        pokemonAbilitiesLayout = findViewById(R.id.pokemon_abilities_layout); // Added
     }
 
     private void fetchPokemonDetails(int pokemonId) {
@@ -86,7 +93,93 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         pokemonNameTextView.setText(details.getName());
         String imageUrl = details.getSprites().getFrontDefault();
         Picasso.get().load(imageUrl).into(pokemonImageView);
+        displayPokemonTypes(details.getTypes());
+        displayPokemonAbilities(details.getAbilities()); // Added
         setupRadarChart(details);
+    }
+    private void displayPokemonAbilities(List<PokemonDetails.AbilityInfo> abilities) {
+        // Remove existing ability views but keep the label
+        if (pokemonAbilitiesLayout.getChildCount() > 1) {
+            pokemonAbilitiesLayout.removeViews(1, pokemonAbilitiesLayout.getChildCount() - 1);
+        }
+
+        // Limit to 4 abilities
+        int abilitiesToShow = Math.min(abilities.size(), 4);
+
+        for (int i = 0; i < abilitiesToShow; i++) {
+            PokemonDetails.AbilityInfo abilityInfo = abilities.get(i);
+            String abilityName = abilityInfo.getAbility().getName();
+
+            // Create TextView for the ability
+            TextView abilityTextView = new TextView(this);
+            abilityTextView.setText(capitalize(abilityName));
+            abilityTextView.setTextColor(Color.BLACK);
+            abilityTextView.setPadding(8, 4, 8, 4);
+
+            // Optionally, indicate if the ability is hidden
+            if (abilityInfo.isHidden()) {
+                abilityTextView.setTypeface(null, Typeface.ITALIC);
+                abilityTextView.setText(abilityTextView.getText() + " (Hidden)");
+            }
+
+            // Set layout parameters with margin
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(0, 4, 0, 4);
+            abilityTextView.setLayoutParams(params);
+
+            // Add the TextView to the layout
+            pokemonAbilitiesLayout.addView(abilityTextView);
+        }
+    }
+    private void displayPokemonTypes(List<PokemonDetails.TypeInfo> types) {
+        // Remove existing type views but keep the label
+        if (pokemonTypesLayout.getChildCount() > 1) {
+            pokemonTypesLayout.removeViews(1, pokemonTypesLayout.getChildCount() - 1);
+        }
+
+        for (PokemonDetails.TypeInfo typeInfo : types) {
+            String typeName = typeInfo.getType().getName();
+
+            // Create TextView for the type
+            TextView typeTextView = new TextView(this);
+            typeTextView.setText(typeName.toUpperCase(Locale.ROOT));
+            typeTextView.setTextColor(Color.WHITE);
+            typeTextView.setPadding(16, 8, 16, 8);
+
+            // Set background color based on type name
+            int bgColor = getTypeColor(typeName);
+            typeTextView.setBackgroundColor(bgColor);
+
+            // Set margins for vertical spacing
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT
+            );
+            params.setMargins(0, 4, 0, 4); // Left, Top, Right, Bottom
+            typeTextView.setLayoutParams(params);
+
+            // Add the TextView to the layout
+            pokemonTypesLayout.addView(typeTextView);
+        }
+    }
+
+    private int getTypeColor(String typeName) {
+        int colorResourceId = getResources().getIdentifier(typeName, "color", getPackageName());
+        if (colorResourceId != 0) {
+            return getResources().getColor(colorResourceId);
+        } else {
+            // Default color if type not found
+            return getResources().getColor(R.color.default_card_background);
+        }
+    }
+    private String capitalize(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        return text.substring(0, 1).toUpperCase() + text.substring(1);
     }
     private void showLoadingIndicator(boolean show) {
         progressBar.setVisibility(show ? View.VISIBLE : View.GONE);

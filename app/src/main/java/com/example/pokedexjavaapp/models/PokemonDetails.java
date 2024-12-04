@@ -2,6 +2,8 @@ package com.example.pokedexjavaapp.models;
 
 import com.google.gson.annotations.SerializedName;
 
+import org.w3c.dom.TypeInfo;
+
 import java.util.List;
 
 public class PokemonDetails {
@@ -16,9 +18,42 @@ public class PokemonDetails {
 
     @SerializedName("stats")
     private List<Stat> stats;
+    @SerializedName("types")
+    private List<TypeInfo> types;
+    @SerializedName("abilities")
+    private List<AbilityInfo> abilities;
 
     // Inner classes for nested JSON objects
+    public static class AbilityInfo {
+        private Ability ability;
+        @SerializedName("is_hidden")
+        private boolean isHidden;
+        private int slot;
 
+        public Ability getAbility() {
+            return ability;
+        }
+
+        public boolean isHidden() {
+            return isHidden;
+        }
+
+        public int getSlot() {
+            return slot;
+        }
+    }
+    public static class Ability {
+        private String name;
+        private String url;
+
+        public String getName() {
+            return name;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+    }
     public static class Sprites {
         @SerializedName("front_default")
         private String frontDefault;
@@ -50,6 +85,31 @@ public class PokemonDetails {
             return name;
         }
     }
+    public static class TypeInfo {
+        private int slot;
+        private TypeDetail type;
+
+        public int getSlot() {
+            return slot;
+        }
+
+        public TypeDetail getType() {
+            return type;
+        }
+    }
+
+    public static class TypeDetail {
+        private String name;
+        private String url;
+
+        public String getName() {
+            return name;
+        }
+
+        public String getUrl() {
+            return url;
+        }
+    }
 
     // Getters for main fields
 
@@ -76,4 +136,6 @@ public class PokemonDetails {
     public List<Stat> getStats() {
         return stats;
     }
+    public List<TypeInfo> getTypes() { return types; }
+    public List<AbilityInfo> getAbilities() { return abilities; }
 }
