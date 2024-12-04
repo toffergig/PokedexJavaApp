@@ -118,7 +118,7 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         }
         RadarDataSet dataSet = new RadarDataSet(entries, "");
         dataSet.setColor(Color.BLUE);
-        dataSet.setFillColor(Color.BLUE);
+        dataSet.setFillColor(Color.parseColor("#5BC0EB"));
         dataSet.setDrawFilled(true);
         dataSet.setFillAlpha(180);
         dataSet.setLineWidth(2f);
