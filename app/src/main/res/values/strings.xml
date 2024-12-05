@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">PokedexJavaApp</string>
+    <string name="app_name">Pokédex</string>
     <string name="fetchApiBtn">Fetch Api</string>
     <string name="status">Api Not Yet Fetched</string>
 </resources>

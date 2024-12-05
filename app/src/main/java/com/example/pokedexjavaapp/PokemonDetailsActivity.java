@@ -124,7 +124,7 @@ public class PokemonDetailsActivity extends AppCompatActivity {
 
             // Set layout parameters with margin
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
             params.setMargins(0, 4, 0, 4);
@@ -158,7 +158,7 @@ public class PokemonDetailsActivity extends AppCompatActivity {
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             );
-            params.setMargins(0, 4, 0, 4); // Left, Top, Right, Bottom
+            params.setMargins(10, 0, 10, 0); // Left, Top, Right, Bottom
             typeTextView.setLayoutParams(params);
 
             // Add the TextView to the layout
