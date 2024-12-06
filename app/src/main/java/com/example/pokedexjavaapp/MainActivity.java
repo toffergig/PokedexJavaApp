@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
     private static final int PAGE_SIZE = 660;
     private static final int GRID_COLUMN_COUNT = 2;
+    private static final int MAX_SELECTION = 3;
 
     // UI Components
     private RecyclerView pokemonRecyclerView;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefreshLayout;
     private SearchView searchView;
     private Button backToTopButton;
+    private Button compareButton;
 
     // Data Components
     private PokemonAdapter pokemonAdapter;
@@ -46,6 +48,10 @@ public class MainActivity extends AppCompatActivity {
     private int offset = 0;
     private boolean isDataReady = false;
     private List<PokemonEntity> allPokemons = new ArrayList<>();
+
+    // Selection Mode Variables
+    private boolean selectionMode = false;
+    private List<PokemonEntity> selectedPokemons = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,7 +71,6 @@ public class MainActivity extends AppCompatActivity {
 
         searchView = findViewById(R.id.search_view);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-
             @Override
             public boolean onQueryTextSubmit(String query) {
                 filterPokemonList(query.trim());
@@ -83,6 +88,10 @@ public class MainActivity extends AppCompatActivity {
         backToTopButton.setOnClickListener(v -> scrollToTop());
         backToTopButton.setVisibility(View.GONE);
 
+        compareButton = findViewById(R.id.compare_button);
+        compareButton.setOnClickListener(v -> openComparePokemonActivity());
+        compareButton.setEnabled(false); // Disabled until selection occurs
+
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         swipeRefreshLayout.setOnRefreshListener(this::refreshPokemonData);
 
@@ -90,7 +99,9 @@ public class MainActivity extends AppCompatActivity {
         GridLayoutManager gridLayoutManager = new GridLayoutManager(this, GRID_COLUMN_COUNT);
         pokemonRecyclerView.setLayoutManager(gridLayoutManager);
 
-        pokemonAdapter = new PokemonAdapter(new ArrayList<>(), this::openPokemonDetails);
+        pokemonAdapter = new PokemonAdapter(new ArrayList<>());
+        pokemonAdapter.setOnItemClickListener(this::onPokemonShortClick);
+        pokemonAdapter.setOnItemLongClickListener(this::onPokemonLongClick);
         pokemonRecyclerView.setAdapter(pokemonAdapter);
 
         // Initialize pagination scroll listener
@@ -113,17 +124,7 @@ public class MainActivity extends AppCompatActivity {
                 GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
                 if (layoutManager != null) {
                     int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
-                    if (firstVisibleItemPosition > 0) {
-                        // Show the button
-                        if (backToTopButton.getVisibility() != View.VISIBLE) {
-                            backToTopButton.setVisibility(View.VISIBLE);
-                        }
-                    } else {
-                        // Hide the button
-                        if (backToTopButton.getVisibility() != View.GONE) {
-                            backToTopButton.setVisibility(View.GONE);
-                        }
-                    }
+                    backToTopButton.setVisibility(firstVisibleItemPosition > 0 ? View.VISIBLE : View.GONE);
                 }
             }
         };
@@ -136,6 +137,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void initializeDataComponents() {
         pokemonRepository = new PokemonRepository(getApplicationContext());
+    }
+
+    private void openComparePokemonActivity() {
+        Intent intent = new Intent(MainActivity.this, ComparePokemonActivity.class);
+        startActivity(intent);
     }
 
     private void prefetchPokemonData() {
@@ -199,6 +205,7 @@ public class MainActivity extends AppCompatActivity {
         offset = 0;
         allPokemons.clear();
         pokemonAdapter.clearPokemonList();
+
         // Remove pagination scroll listener
         pokemonRecyclerView.removeOnScrollListener(paginationScrollListener);
         // Re-initialize pagination scroll listener
@@ -216,15 +223,7 @@ public class MainActivity extends AppCompatActivity {
     private void filterPokemonList(String query) {
         if (query.isEmpty()) {
             pokemonAdapter.setPokemonList(new ArrayList<>(allPokemons));
-            // Remove and re-add pagination scroll listener
-            pokemonRecyclerView.removeOnScrollListener(paginationScrollListener);
-            paginationScrollListener = new EndlessRecyclerViewScrollListener((GridLayoutManager) pokemonRecyclerView.getLayoutManager()) {
-                @Override
-                public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                    fetchPokemonData();
-                }
-            };
-            pokemonRecyclerView.addOnScrollListener(paginationScrollListener);
+            reinitializePaginationListener();
             return;
         }
 
@@ -240,6 +239,65 @@ public class MainActivity extends AppCompatActivity {
         // Remove pagination scroll listener when filtering
         pokemonRecyclerView.removeOnScrollListener(paginationScrollListener);
         // Back to Top scroll listener remains attached
+    }
+
+    private void reinitializePaginationListener() {
+        pokemonRecyclerView.removeOnScrollListener(paginationScrollListener);
+        paginationScrollListener = new EndlessRecyclerViewScrollListener((GridLayoutManager) pokemonRecyclerView.getLayoutManager()) {
+            @Override
+            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
+                fetchPokemonData();
+            }
+        };
+        pokemonRecyclerView.addOnScrollListener(paginationScrollListener);
+    }
+
+    // Handle short click on a Pokemon
+    private void onPokemonShortClick(PokemonEntity pokemon) {
+        if (selectionMode) {
+            togglePokemonSelection(pokemon);
+        } else {
+            openPokemonDetails(pokemon);
+        }
+    }
+
+    // Handle long click on a Pokemon
+    private void onPokemonLongClick(PokemonEntity pokemon) {
+        if (!selectionMode) {
+            // Enable selection mode and select the Pokémon
+            selectionMode = true;
+            togglePokemonSelection(pokemon);
+        } else {
+            // Already in selection mode, just toggle selection as usual
+            togglePokemonSelection(pokemon);
+        }
+    }
+
+    private void togglePokemonSelection(PokemonEntity pokemon) {
+        if (selectedPokemons.contains(pokemon)) {
+            // Deselect if currently selected
+            selectedPokemons.remove(pokemon);
+        } else {
+            // Select if not already selected, provided we haven't reached max limit
+            if (selectedPokemons.size() < MAX_SELECTION) {
+                selectedPokemons.add(pokemon);
+            } else {
+                Log.d(TAG, "Maximum of " + MAX_SELECTION + " Pokémon can be selected.");
+                return; // Don't add more
+            }
+        }
+        pokemonAdapter.setSelectedPokemons(selectedPokemons);
+        updateCompareButtonState();
+    }
+
+    private void updateCompareButtonState() {
+            boolean hasSelection = !selectedPokemons.isEmpty();
+            compareButton.setEnabled(hasSelection);
+
+            // If no Pokémon are selected, turn off selection mode
+            if (!hasSelection) {
+                selectionMode = false;
+            }
     }
 
     private void openPokemonDetails(PokemonEntity pokemon) {

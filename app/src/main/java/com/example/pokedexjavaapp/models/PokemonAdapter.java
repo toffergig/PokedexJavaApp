@@ -1,5 +1,6 @@
 package com.example.pokedexjavaapp.models;
 
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -11,21 +12,43 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.pokedexjavaapp.R;
 import com.squareup.picasso.Picasso;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonViewHolder> {
 
-    private List<PokemonEntity> pokemonList;
-    private OnItemClickListener listener;
+    private final List<PokemonEntity> pokemonList;
+    private final List<PokemonEntity> selectedPokemons = new ArrayList<>();
+
+    private OnItemClickListener onItemClickListener;
+    private OnItemLongClickListener onItemLongClickListener;
 
     public interface OnItemClickListener {
         void onItemClick(PokemonEntity pokemon);
     }
 
-    public PokemonAdapter(List<PokemonEntity> pokemonList, OnItemClickListener listener) {
+    public interface OnItemLongClickListener {
+        void onItemLongClick(PokemonEntity pokemon);
+    }
+
+    public PokemonAdapter(List<PokemonEntity> pokemonList) {
         this.pokemonList = pokemonList;
-        this.listener = listener;
+    }
+
+    public void setOnItemClickListener(OnItemClickListener listener) {
+        this.onItemClickListener = listener;
+    }
+
+    public void setOnItemLongClickListener(OnItemLongClickListener listener) {
+        this.onItemLongClickListener = listener;
+    }
+
+    // Update selected Pokémon list and refresh UI
+    public void setSelectedPokemons(List<PokemonEntity> selected) {
+        selectedPokemons.clear();
+        selectedPokemons.addAll(selected);
+        notifyDataSetChanged();
     }
 
     @NonNull
@@ -45,10 +68,25 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         holder.pokemonNameTextView.setText(pokemon.getName());
         Picasso.get().load(pokemon.getSpriteURL()).into(holder.pokemonSpriteImageView);
 
+        // Highlight if selected
+        if (selectedPokemons.contains(pokemon)) {
+            holder.itemView.setBackgroundColor(Color.parseColor("#ebf5fb"));
+        } else {
+            holder.itemView.setBackgroundColor(Color.WHITE);
+        }
+
         holder.itemView.setOnClickListener(v -> {
-            if (listener != null) {
-                listener.onItemClick(pokemon);
+            if (onItemClickListener != null) {
+                onItemClickListener.onItemClick(pokemon);
             }
+        });
+
+        holder.itemView.setOnLongClickListener(v -> {
+            if (onItemLongClickListener != null) {
+                onItemLongClickListener.onItemLongClick(pokemon);
+                return true;
+            }
+            return false;
         });
     }
 
