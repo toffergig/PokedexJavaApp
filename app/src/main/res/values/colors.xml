@@ -25,4 +25,5 @@
     <color name="water">#539AE2</color>
     <color name="bluestroke">#5BC0EB</color>
     <color name="default_card_background">#FFFFFF</color>
+    <color name="selected_card_color">#EBF5FB</color>
 </resources>

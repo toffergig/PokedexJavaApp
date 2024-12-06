@@ -57,13 +57,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
-        splashScreen.setKeepOnScreenCondition(() -> !isDataReady);
-
         setContentView(R.layout.activity_main);
-
         initializeUIComponents();
         initializeDataComponents();
         prefetchPokemonData();
+        splashScreen.setKeepOnScreenCondition(() -> !isDataReady);
     }
 
     private void initializeUIComponents() {
@@ -301,10 +299,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openPokemonDetails(PokemonEntity pokemon) {
+        showLoadingIndicator(true);
         Intent intent = new Intent(MainActivity.this, PokemonDetailsActivity.class);
         intent.putExtra("pokemon_id", pokemon.getId());
         intent.putExtra("pokemon_name", pokemon.getName());
         intent.putExtra("pokemon_sprite_url", pokemon.getSpriteURL());
+        showLoadingIndicator(false);
         startActivity(intent);
     }
 

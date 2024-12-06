@@ -8,6 +8,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 import com.example.pokedexjavaapp.R;
 import com.squareup.picasso.Picasso;
@@ -15,6 +16,7 @@ import com.squareup.picasso.Picasso;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import androidx.core.content.ContextCompat;
 
 public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonViewHolder> {
 
@@ -69,11 +71,16 @@ public class PokemonAdapter extends RecyclerView.Adapter<PokemonAdapter.PokemonV
         Picasso.get().load(pokemon.getSpriteURL()).into(holder.pokemonSpriteImageView);
 
         // Highlight if selected
-        if (selectedPokemons.contains(pokemon)) {
-            holder.itemView.setBackgroundColor(Color.parseColor("#ebf5fb"));
-        } else {
-            holder.itemView.setBackgroundColor(Color.WHITE);
-        }
+//        if (selectedPokemons.contains(pokemon)) {
+//            holder.itemView.setBackgroundColor(Color.parseColor("#ebf5fb"));
+//        } else {
+//            holder.itemView.setBackgroundColor(Color.WHITE);
+//        }
+
+        int backgroundColor = selectedPokemons.contains(pokemon)
+                ? ContextCompat.getColor(holder.itemView.getContext(), R.color.selected_card_color)
+                : Color.WHITE;
+        ((CardView) holder.itemView).setCardBackgroundColor(backgroundColor);
 
         holder.itemView.setOnClickListener(v -> {
             if (onItemClickListener != null) {
