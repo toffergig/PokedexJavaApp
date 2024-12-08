@@ -26,4 +26,8 @@
     <color name="bluestroke">#5BC0EB</color>
     <color name="default_card_background">#FFFFFF</color>
     <color name="selected_card_color">#EBF5FB</color>
+    <color name="blue_fill">#5BC0EB</color>
+    <color name="green_fill">#7DCEA0</color>
+    <color name="red_fill">#E55934</color>
+    <color name="progress_bar_color">#846AB6</color>
 </resources>

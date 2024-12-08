@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -138,7 +139,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void openComparePokemonActivity() {
+        // Check if we have selected Pokémon
+        if (selectedPokemons.isEmpty()) {
+            // No Pokémon selected, show a message
+            Log.e(TAG, "No Pokémon selected for comparison.");
+            Toast.makeText(this, "No Pokémon selected for comparison.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // We have selected Pokémon, proceed to compare
         Intent intent = new Intent(MainActivity.this, ComparePokemonActivity.class);
+
+        // Convert selectedPokemons to a list of IDs
+        ArrayList<Integer> selectedIds = new ArrayList<>();
+        for (PokemonEntity p : selectedPokemons) {
+            selectedIds.add(p.getId());
+        }
+
+        // Attach the selected IDs to the intent
+        intent.putIntegerArrayListExtra("selected_pokemon_ids", selectedIds);
+
+        // Start ComparePokemonActivity
         startActivity(intent);
     }
 

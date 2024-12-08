@@ -1,3 +1,6 @@
+// File: PokemonDetailsActivity.java
+// Package: com.example.pokedexjavaapp
+
 package com.example.pokedexjavaapp;
 
 import android.graphics.Color;
@@ -5,28 +8,29 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.example.pokedexjavaapp.api.PokemonApiService;
 import com.example.pokedexjavaapp.api.RetrofitClient;
+import com.example.pokedexjavaapp.helpers.RadarChartConfig;
+import com.example.pokedexjavaapp.helpers.RadarChartHelper;
 import com.example.pokedexjavaapp.models.PokemonDetails;
 import com.github.mikephil.charting.charts.RadarChart;
-import com.github.mikephil.charting.components.XAxis;
-import com.github.mikephil.charting.components.YAxis;
-import com.github.mikephil.charting.data.RadarData;
-import com.github.mikephil.charting.data.RadarDataSet;
-import com.github.mikephil.charting.data.RadarEntry;
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
-import com.github.mikephil.charting.interfaces.datasets.IRadarDataSet;
 import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -41,20 +45,30 @@ public class PokemonDetailsActivity extends AppCompatActivity {
     private ProgressBar progressBar;
     private LinearLayout pokemonTypesLayout; // Added
     private LinearLayout pokemonAbilitiesLayout; // Added
+    private LinearLayout baseStatsLayout; // Added
+
+    // RadarChart Helper
+    private RadarChartHelper radarChartHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.pokemon_details_activity);
         initializeViews();
+        initializeHelpers();
         int pokemonId = getIntent().getIntExtra("pokemon_id", -1);
         if (pokemonId != -1) {
             fetchPokemonDetails(pokemonId);
         } else {
             Log.e(TAG, "Invalid Pokémon ID");
+            Toast.makeText(this, "Invalid Pokémon selected.", Toast.LENGTH_SHORT).show();
+            finish(); // Close the activity since there's an invalid ID
         }
     }
 
+    /**
+     * Initialize UI components by binding them to their XML counterparts.
+     */
     private void initializeViews() {
         pokemonNameTextView = findViewById(R.id.pokemon_detail_name);
         pokemonImageView = findViewById(R.id.pokemon_detail_image);
@@ -63,8 +77,21 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         progressBar = findViewById(R.id.progress_bar);
         pokemonTypesLayout = findViewById(R.id.pokemon_types_layout); // Added
         pokemonAbilitiesLayout = findViewById(R.id.pokemon_abilities_layout); // Added
+        baseStatsLayout = findViewById(R.id.base_stats_layout); // Added
     }
 
+    /**
+     * Initialize helper classes for managing RadarChart configurations.
+     */
+    private void initializeHelpers() {
+        radarChartHelper = new RadarChartHelper(this, radarChart);
+    }
+
+    /**
+     * Fetch details for the given Pokémon ID asynchronously.
+     *
+     * @param pokemonId The ID of the Pokémon to fetch.
+     */
     private void fetchPokemonDetails(int pokemonId) {
         showLoadingIndicator(true);
         PokemonApiService apiService = RetrofitClient.getPokemonApiService();
@@ -76,6 +103,7 @@ public class PokemonDetailsActivity extends AppCompatActivity {
                     displayPokemonDetails(response.body());
                 } else {
                     Log.e(TAG, "Failed to get Pokémon details");
+                    Toast.makeText(PokemonDetailsActivity.this, "Failed to load Pokémon details.", Toast.LENGTH_SHORT).show();
                 }
             }
 
@@ -83,20 +111,116 @@ public class PokemonDetailsActivity extends AppCompatActivity {
             public void onFailure(@NonNull Call<PokemonDetails> call, @NonNull Throwable t) {
                 showLoadingIndicator(false);
                 Log.e(TAG, "API call failed: " + t.getMessage());
+                Toast.makeText(PokemonDetailsActivity.this, "Error loading Pokémon details.", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
+    /**
+     * Displays the Pokémon details on the UI.
+     *
+     * @param details The PokémonDetails object containing data.
+     */
     private void displayPokemonDetails(PokemonDetails details) {
-        String formattedId = String.format(Locale.getDefault(), "%03d", details.getId());
-        pokemonIdTextView.setText(formattedId);
-        pokemonNameTextView.setText(details.getName());
-        String imageUrl = details.getSprites().getFrontDefault();
-        Picasso.get().load(imageUrl).into(pokemonImageView);
+        displayPokemonBasicInfo(details);
         displayPokemonTypes(details.getTypes());
-        displayPokemonAbilities(details.getAbilities()); // Added
+        displayPokemonAbilities(details.getAbilities());
         setupRadarChart(details);
+        displayBaseStats(details.getStats()); // Added
     }
+
+    /**
+     * Displays the base stats using horizontal progress bars.
+     *
+     * @param stats List of Stat objects representing Pokémon base stats.
+     */
+    private void displayBaseStats(List<PokemonDetails.Stat> stats) {
+        // Clear any existing views to avoid duplication
+        baseStatsLayout.removeAllViews();
+
+        for (PokemonDetails.Stat statInfo : stats) {
+            String statName = capitalize(statInfo.getStat().getName().replace("-", " "));
+            int statValue = statInfo.getBaseStat();
+
+            // Create a vertical LinearLayout for each stat
+            LinearLayout statItemLayout = new LinearLayout(this);
+            statItemLayout.setOrientation(LinearLayout.VERTICAL);
+            statItemLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            statItemLayout.setPadding(0, 8, 0, 8);
+
+            // Create a horizontal LinearLayout for stat name and value
+            LinearLayout statHeaderLayout = new LinearLayout(this);
+            statHeaderLayout.setOrientation(LinearLayout.HORIZONTAL);
+            statHeaderLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+            statHeaderLayout.setGravity(Gravity.CENTER_VERTICAL);
+
+            // Stat Name TextView
+            TextView statNameTextView = new TextView(this);
+            statNameTextView.setText(statName);
+            statNameTextView.setTextSize(16f);
+            statNameTextView.setTypeface(null, Typeface.BOLD);
+            statNameTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                    0,
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    1f));
+
+            // Stat Value TextView
+            TextView statValueTextView = new TextView(this);
+            statValueTextView.setText(String.valueOf(statValue));
+            statValueTextView.setTextSize(16f);
+            statValueTextView.setTypeface(null, Typeface.NORMAL);
+            statValueTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT));
+
+            // Add TextViews to the header layout
+            statHeaderLayout.addView(statNameTextView);
+            statHeaderLayout.addView(statValueTextView);
+
+            // Create ProgressBar
+            ProgressBar statProgressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal);
+            statProgressBar.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT,
+                    20));
+            statProgressBar.setMax(255); // Pokémon base stats typically max out at 255
+            statProgressBar.setProgress(statValue);
+          //  statProgressBar.setProgressTint(getTypeColor("progress_bar_color")); // Optional: Define a color in colors.xml
+
+            // Add header and progress bar to the stat item layout
+            statItemLayout.addView(statHeaderLayout);
+            statItemLayout.addView(statProgressBar);
+
+            // Add the stat item layout to the base stats container
+            baseStatsLayout.addView(statItemLayout);
+        }
+    }
+
+    /**
+     * Displays basic Pokémon information: ID, name, and image.
+     *
+     * @param details The PokémonDetails object containing basic info.
+     */
+    private void displayPokemonBasicInfo(PokemonDetails details) {
+        String formattedId = String.format(Locale.getDefault(), "#%03d", details.getId());
+        pokemonIdTextView.setText(formattedId);
+        pokemonNameTextView.setText(capitalize(details.getName()));
+        String imageUrl = details.getSprites().getFrontDefault();
+        if (imageUrl != null && !imageUrl.isEmpty()) {
+            Picasso.get()
+                    .load(imageUrl)
+                    .into(pokemonImageView);
+        }
+    }
+
+    /**
+     * Displays the Pokémon abilities.
+     *
+     * @param abilities List of AbilityInfo objects representing Pokémon abilities.
+     */
     private void displayPokemonAbilities(List<PokemonDetails.AbilityInfo> abilities) {
         // Remove existing ability views but keep the label
         if (pokemonAbilitiesLayout.getChildCount() > 1) {
@@ -134,6 +258,12 @@ public class PokemonDetailsActivity extends AppCompatActivity {
             pokemonAbilitiesLayout.addView(abilityTextView);
         }
     }
+
+    /**
+     * Displays the Pokémon types.
+     *
+     * @param types List of TypeInfo objects representing Pokémon types.
+     */
     private void displayPokemonTypes(List<PokemonDetails.TypeInfo> types) {
         // Remove existing type views but keep the label
         if (pokemonTypesLayout.getChildCount() > 1) {
@@ -147,13 +277,17 @@ public class PokemonDetailsActivity extends AppCompatActivity {
             TextView typeTextView = new TextView(this);
             typeTextView.setText(typeName.toUpperCase(Locale.ROOT));
             typeTextView.setTextColor(Color.WHITE);
+            typeTextView.setTypeface(null, Typeface.BOLD);
             typeTextView.setPadding(16, 8, 16, 8);
 
-            // Set background color based on type name
-            int bgColor = getTypeColor(typeName);
-            typeTextView.setBackgroundColor(bgColor);
+            // Set background with rounded corners and specific color
+            GradientDrawable bgDrawable = new GradientDrawable();
+            bgDrawable.setShape(GradientDrawable.RECTANGLE);
+            bgDrawable.setCornerRadius(16f);
+            bgDrawable.setColor(getTypeColor(typeName));
+            typeTextView.setBackground(bgDrawable);
 
-            // Set margins for vertical spacing
+            // Set margins for horizontal spacing
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.WRAP_CONTENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
@@ -166,7 +300,62 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Sets up the RadarChart using RadarChartHelper.
+     *
+     * @param details The PokémonDetails object containing stats.
+     */
+    private void setupRadarChart(PokemonDetails details) {
+        List<PokemonDetails> detailsList = new ArrayList<>();
+        detailsList.add(details);
+
+        // Create RadarChartConfig based on activity requirements
+        // For PokemonDetailsActivity, legends and labels are not needed
+        RadarChartConfig config = new RadarChartConfig(false, false);
+
+        // Build the RadarChart with the provided configuration
+        radarChartHelper.buildRadarChart(detailsList, config);
+    }
+
+    /**
+     * Shows or hides the loading indicator.
+     *
+     * @param show True to show the progress bar, false to hide.
+     */
+    private void showLoadingIndicator(boolean show) {
+        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
+    }
+
+    /**
+     * Capitalizes the first letter of each word in a given string.
+     *
+     * @param text The input string.
+     * @return The capitalized string.
+     */
+    private String capitalize(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        String[] words = text.split(" ");
+        StringBuilder capitalized = new StringBuilder();
+        for (String word : words) {
+            if(word.length() > 0){
+                capitalized.append(word.substring(0, 1).toUpperCase())
+                        .append(word.substring(1))
+                        .append(" ");
+            }
+        }
+        return capitalized.toString().trim();
+    }
+
+    /**
+     * Retrieves the color associated with a Pokémon type or a default color.
+     *
+     * @param typeName The name of the Pokémon type or a predefined key.
+     * @return The color integer.
+     */
     private int getTypeColor(String typeName) {
+        // Assuming you have defined a color named 'progress_bar_color' in colors.xml
         int colorResourceId = getResources().getIdentifier(typeName, "color", getPackageName());
         if (colorResourceId != 0) {
             return getResources().getColor(colorResourceId);
@@ -175,95 +364,4 @@ public class PokemonDetailsActivity extends AppCompatActivity {
             return getResources().getColor(R.color.default_card_background);
         }
     }
-    private String capitalize(String text) {
-        if (text == null || text.isEmpty()) {
-            return "";
-        }
-        return text.substring(0, 1).toUpperCase() + text.substring(1);
-    }
-    private void showLoadingIndicator(boolean show) {
-        progressBar.setVisibility(show ? View.VISIBLE : View.GONE);
-    }
-    private void setupRadarChart(PokemonDetails details) {
-        configureChartAppearance();
-        RadarData radarData = createRadarData(details);
-        configureChartAxes(radarData);
-        radarChart.setData(radarData);
-        radarChart.invalidate();
-    }
-
-    private void configureChartAppearance() {
-        radarChart.getDescription().setEnabled(false);
-        radarChart.setWebColor(Color.GRAY);
-        radarChart.setWebLineWidth(1f);
-        radarChart.setWebColorInner(Color.LTGRAY);
-        radarChart.setWebLineWidthInner(1f);
-        radarChart.setWebAlpha(100);
-        radarChart.animateXY(1000, 1000);
-    }
-
-    private RadarData createRadarData(PokemonDetails details) {
-        List<RadarEntry> entries = new ArrayList<>();
-        List<String> labels = new ArrayList<>();
-        for (PokemonDetails.Stat stat : details.getStats()) {
-            entries.add(new RadarEntry(stat.getBaseStat()));
-            labels.add(formatStatName(stat.getStat().getName()));
-        }
-        RadarDataSet dataSet = new RadarDataSet(entries, "");
-        dataSet.setColor(Color.BLUE);
-        dataSet.setFillColor(Color.parseColor("#5BC0EB"));
-        dataSet.setDrawFilled(true);
-        dataSet.setFillAlpha(180);
-        dataSet.setLineWidth(2f);
-        dataSet.setValueTextSize(12f);
-        dataSet.setValueTextColor(Color.BLACK);
-        RadarData radarData = new RadarData(dataSet);
-        radarData.setLabels(labels.toArray(new String[0]));
-        return radarData;
-    }
-
-    private void configureChartAxes(RadarData radarData) {
-        XAxis xAxis = radarChart.getXAxis();
-        xAxis.setValueFormatter(new IndexAxisValueFormatter(radarData.getLabels()));
-        xAxis.setTextSize(14f);
-        xAxis.setTextColor(Color.BLACK);
-        YAxis yAxis = radarChart.getYAxis();
-        yAxis.setLabelCount(5, true);
-        yAxis.setTextSize(9f);
-        yAxis.setAxisMinimum(0f);
-        yAxis.setAxisMaximum(calculateYAxisMaximum(radarData));
-        yAxis.setDrawLabels(false);
-    }
-
-    private float calculateYAxisMaximum(RadarData radarData) {
-        float maxStat = 0f;
-        for (IRadarDataSet dataSet : radarData.getDataSets()) {
-            for (RadarEntry entry : dataSet.getEntriesForXValue(0)) {
-                if (entry.getValue() > maxStat) {
-                    maxStat = entry.getValue();
-                }
-            }
-        }
-        return maxStat * 1.2f; // Add 20% margin for better visualization
-    }
-
-    private String formatStatName(String statName) {
-        switch (statName) {
-            case "hp":
-                return "HP";
-            case "attack":
-                return "Attack";
-            case "defense":
-                return "Defense";
-            case "special-attack":
-                return "Sp. Atk";
-            case "special-defense":
-                return "Sp. Def";
-            case "speed":
-                return "Speed";
-            default:
-                return statName;
-        }
-    }
-
 }

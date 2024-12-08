@@ -1,141 +1,196 @@
+// File: ComparePokemonActivity.java
+// Package: com.example.pokedexjavaapp
+
 package com.example.pokedexjavaapp;
 
-import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.ArrayAdapter;
-import android.widget.AutoCompleteTextView;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.pokedexjavaapp.api.PokemonApiService;
-import com.example.pokedexjavaapp.api.PokemonResponse;
 import com.example.pokedexjavaapp.api.RetrofitClient;
-import com.example.pokedexjavaapp.models.Pokemon;
+import com.example.pokedexjavaapp.helpers.RadarChartConfig;
+import com.example.pokedexjavaapp.helpers.RadarChartHelper;
 import com.example.pokedexjavaapp.models.PokemonDetails;
-import com.google.android.material.chip.Chip;
-import com.google.android.material.chip.ChipGroup;
+import com.github.mikephil.charting.charts.RadarChart;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+/**
+ * Activity to compare multiple Pokémon using a RadarChart.
+ */
 public class ComparePokemonActivity extends AppCompatActivity {
 
     private static final String TAG = "ComparePokemonActivity";
-    private static final int PAGE_SIZE = 660; // Number of Pokémon to fetch
-    private AutoCompleteTextView autoCompleteTextView;
-    private ChipGroup chipGroup;
+
+    // UI Components
+    private RadarChart radarChart;
+    private ProgressBar progressBar;
+
+    // API Service
     private PokemonApiService apiService;
-    private ArrayAdapter<String> adapter;
-    private List<String> pokemonNames = new ArrayList<>();
+
+    // Selected Pokémon IDs passed from MainActivity
+    private ArrayList<Integer> selectedPokemonIds;
+
+    // Store fetched Pokémon details
+    private final List<PokemonDetails> fetchedDetails = new ArrayList<>();
+
+    // Track completed API requests
+    private int requestsCompleted = 0;
+
+    // RadarChart Helper
+    private RadarChartHelper radarChartHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.compare_pokemon_activity);
 
-        initViews();
-        initApiService();
-        loadAllPokemonNames();
+        initializeViews();
+        initializeApiService();
+        retrieveSelectedPokemonIds();
+
+        if (selectedPokemonIds == null || selectedPokemonIds.isEmpty()) {
+            // No Pokémon selected, show message and exit
+            Log.e(TAG, "No Pokémon IDs received for comparison.");
+            Toast.makeText(this, "No Pokémon selected for comparison.", Toast.LENGTH_SHORT).show();
+            finish(); // Close the activity since there's nothing to compare
+            return;
+        }
+
+        // Initialize RadarChartHelper with the RadarChart view
+        radarChartHelper = new RadarChartHelper(this, radarChart);
+
+        fetchSelectedPokemonDetails();
     }
 
-    private void initViews() {
-        autoCompleteTextView = findViewById(R.id.autoCompleteTextView);
-        chipGroup = findViewById(R.id.chipGroup);
-
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, pokemonNames);
-        autoCompleteTextView.setAdapter(adapter);
-
-        autoCompleteTextView.setOnItemClickListener((parent, view, position, id) -> {
-            String selectedName = adapter.getItem(position);
-            if (selectedName != null) {
-                fetchPokemonDetails(selectedName.toLowerCase(Locale.ROOT));
-            }
-            autoCompleteTextView.setText("");
-        });
+    /**
+     * Initialize UI components by binding them to their XML counterparts.
+     */
+    private void initializeViews() {
+        radarChart = findViewById(R.id.radar_chart);
+//        progressBar = findViewById(R.id.progress_bar_compare);
     }
 
-    private void initApiService() {
+    /**
+     * Initialize the API service using Retrofit.
+     */
+    private void initializeApiService() {
         apiService = RetrofitClient.getPokemonApiService();
     }
 
-    private void loadAllPokemonNames() {
-        // Fetch a large list of Pokémon from the API (name + URL only)
-        apiService.getPokemonList(PAGE_SIZE, 0).enqueue(new Callback<PokemonResponse>() {
-            @Override
-            public void onResponse(@NonNull Call<PokemonResponse> call, @NonNull Response<PokemonResponse> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    for (Pokemon p : response.body().getResults()) {
-                        pokemonNames.add(p.getName());
+    /**
+     * Retrieve the list of selected Pokémon IDs passed via the Intent.
+     */
+    private void retrieveSelectedPokemonIds() {
+        // Assuming you're passing an ArrayList<Integer> via Intent with key "selected_pokemon_ids"
+        selectedPokemonIds = getIntent().getIntegerArrayListExtra("selected_pokemon_ids");
+    }
+
+    /**
+     * Fetch details for each selected Pokémon ID asynchronously.
+     * Once all requests are completed, proceed to build the radar chart.
+     */
+    private void fetchSelectedPokemonDetails() {
+//        showLoadingIndicator(true);
+        for (Integer id : selectedPokemonIds) {
+            apiService.getPokemonDetails(id).enqueue(new Callback<PokemonDetails>() {
+                @Override
+                public void onResponse(@NonNull Call<PokemonDetails> call, @NonNull Response<PokemonDetails> response) {
+                    requestsCompleted++;
+                    if (response.isSuccessful() && response.body() != null) {
+                        fetchedDetails.add(response.body());
+                        Log.d(TAG, "Fetched details for Pokémon ID: " + id);
+                    } else {
+                        Log.e(TAG, "Failed to fetch details for Pokémon ID: " + id);
                     }
-                    adapter.notifyDataSetChanged();
-                } else {
-                    Log.e(TAG, "Failed to load Pokémon names");
+                    checkIfAllRequestsCompleted();
                 }
-            }
 
-            @Override
-            public void onFailure(@NonNull Call<PokemonResponse> call, @NonNull Throwable t) {
-                Log.e(TAG, "API call failed: " + t.getMessage());
-            }
-        });
-    }
-
-    private void fetchPokemonDetails(String name) {
-        // Fetch Pokémon details (including base stats) by name
-        apiService.getPokemonDetails(Integer.parseInt(name)).enqueue(new Callback<PokemonDetails>() {
-            @Override
-            public void onResponse(@NonNull Call<PokemonDetails> call, @NonNull Response<PokemonDetails> response) {
-                if (response.isSuccessful() && response.body() != null) {
-                    PokemonDetails details = response.body();
-                    addPokemonChip(details);
-                    logBaseStats(details);
-                } else {
-                    Log.e(TAG, "Failed to get details for: " + name);
+                @Override
+                public void onFailure(@NonNull Call<PokemonDetails> call, @NonNull Throwable t) {
+                    requestsCompleted++;
+                    Log.e(TAG, "API call failed for Pokémon ID: " + id + ". Error: " + t.getMessage());
+                    checkIfAllRequestsCompleted();
                 }
-            }
-
-            @Override
-            public void onFailure(@NonNull Call<PokemonDetails> call, @NonNull Throwable t) {
-                Log.e(TAG, "Details API call failed: " + t.getMessage());
-            }
-        });
-    }
-
-    private void addPokemonChip(PokemonDetails details) {
-        Chip chip = new Chip(this);
-        chip.setText(capitalize(details.getName()));
-        chip.setCloseIconVisible(true);
-        chip.setChipBackgroundColorResource(android.R.color.darker_gray);
-        chip.setTextColor(Color.WHITE);
-
-        // Remove chip on close
-        chip.setOnCloseIconClickListener(v -> chipGroup.removeView(chip));
-
-        chipGroup.addView(chip);
-    }
-
-    private void logBaseStats(PokemonDetails details) {
-        // Log base stats for debugging or comparison
-        if (details.getStats() != null) {
-            StringBuilder sb = new StringBuilder();
-            sb.append("Base stats for ").append(details.getName()).append(": ");
-            details.getStats().forEach(stat -> sb.append(stat.getStat().getName())
-                    .append(": ")
-                    .append(stat.getBaseStat())
-                    .append(", "));
-            Log.d(TAG, sb.toString());
+            });
         }
     }
 
-    private String capitalize(String text) {
-        if (text == null || text.isEmpty()) return "";
-        return text.substring(0, 1).toUpperCase() + text.substring(1);
+    /**
+     * Check if all Pokémon detail requests have been completed.
+     * If all requests are done, sort the Pokémon and build the radar chart.
+     */
+    private void checkIfAllRequestsCompleted() {
+        if (requestsCompleted == selectedPokemonIds.size()) {
+//            showLoadingIndicator(false);
+            if (fetchedDetails.isEmpty()) {
+                // All requests failed
+                Toast.makeText(this, "Failed to fetch any Pokémon details for comparison.", Toast.LENGTH_SHORT).show();
+                finish(); // Close the activity since there's no data to display
+                return;
+            }
+            sortPokemonByAverage(); // Sort Pokémon based on average base stats
+            buildRadarChart();
+        }
     }
+
+    /**
+     * Sort the fetchedDetails list in descending order based on average base stats.
+     */
+    private void sortPokemonByAverage() {
+        fetchedDetails.sort((p1, p2) -> {
+            float avg1 = calculateAverageBaseStat(p1);
+            float avg2 = calculateAverageBaseStat(p2);
+            return Float.compare(avg2, avg1); // Descending order
+        });
+
+
+        for (PokemonDetails pokemon : fetchedDetails) {
+            Log.d(TAG, "Pokémon: " + pokemon.getName() + ", Average Base Stat: " + calculateAverageBaseStat(pokemon));
+        }
+    }
+
+    /**
+     * Calculate the average base stats for a given Pokémon.
+     *
+     * @param pokemon The PokémonDetails object.
+     * @return The average base stat as a float.
+     */
+    private float calculateAverageBaseStat(PokemonDetails pokemon) {
+        if (pokemon.getStats() == null || pokemon.getStats().isEmpty()) {
+            return 0f;
+        }
+
+        int sum = 0;
+        for (PokemonDetails.Stat stat : pokemon.getStats()) {
+            sum += stat.getBaseStat();
+        }
+
+        return (float) sum / pokemon.getStats().size();
+    }
+
+    /**
+     * Builds the RadarChart using the RadarChartHelper.
+     */
+    private void buildRadarChart() {
+        // Create RadarChartConfig based on activity requirements
+        // For ComparePokemonActivity, legends and labels are needed
+        RadarChartConfig config = new RadarChartConfig(true, true);
+
+        // Build the RadarChart with the provided configuration
+        radarChartHelper.buildRadarChart(fetchedDetails, config);
+    }
+
 }

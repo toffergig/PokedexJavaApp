@@ -2,8 +2,6 @@ package com.example.pokedexjavaapp.models;
 
 import com.google.gson.annotations.SerializedName;
 
-import org.w3c.dom.TypeInfo;
-
 import java.util.List;
 
 public class PokemonDetails {
