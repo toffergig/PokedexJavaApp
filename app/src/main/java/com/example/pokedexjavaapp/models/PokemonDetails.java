@@ -6,10 +6,21 @@ import java.util.List;
 
 public class PokemonDetails {
 
-    private int id;
-    private String name;
-    private int height;
-    private int weight;
+    public PokemonDetails(int id, String name, int height, int weight, Sprites sprites, List<Stat> stats, List<TypeInfo> types, List<AbilityInfo> abilities) {
+        this.id = id;
+        this.name = name;
+        this.height = height;
+        this.weight = weight;
+        this.sprites = sprites;
+        this.stats = stats;
+        this.types = types;
+        this.abilities = abilities;
+    }
+
+    private final int id;
+    private final String name;
+    private final int height;
+    private final int weight;
 
     @SerializedName("sprites")
     private Sprites sprites;
@@ -23,10 +34,15 @@ public class PokemonDetails {
 
     // Inner classes for nested JSON objects
     public static class AbilityInfo {
-        private Ability ability;
+        private final Ability ability;
         @SerializedName("is_hidden")
         private boolean isHidden;
-        private int slot;
+        private final int slot;
+
+        public AbilityInfo(Ability ability, int slot) {
+            this.ability = ability;
+            this.slot = slot;
+        }
 
         public Ability getAbility() {
             return ability;
@@ -41,8 +57,13 @@ public class PokemonDetails {
         }
     }
     public static class Ability {
-        private String name;
-        private String url;
+        private final String name;
+        private final String url;
+
+        public Ability(String name, String url) {
+            this.name = name;
+            this.url = url;
+        }
 
         public String getName() {
             return name;
@@ -83,7 +104,11 @@ public class PokemonDetails {
         @SerializedName("base_stat")
         private int baseStat;
 
-        private StatDetail stat;
+        private final StatDetail stat;
+
+        public Stat(StatDetail stat) {
+            this.stat = stat;
+        }
 
         public int getBaseStat() {
             return baseStat;
@@ -95,15 +120,24 @@ public class PokemonDetails {
     }
 
     public static class StatDetail {
-        private String name;
+        private final String name;
+
+        public StatDetail(String name) {
+            this.name = name;
+        }
 
         public String getName() {
             return name;
         }
     }
     public static class TypeInfo {
-        private int slot;
-        private TypeDetail type;
+        private final int slot;
+        private final TypeDetail type;
+
+        public TypeInfo(int slot, TypeDetail type) {
+            this.slot = slot;
+            this.type = type;
+        }
 
         public int getSlot() {
             return slot;
@@ -115,8 +149,13 @@ public class PokemonDetails {
     }
 
     public static class TypeDetail {
-        private String name;
-        private String url;
+        private final String name;
+        private final String url;
+
+        public TypeDetail(String name, String url) {
+            this.name = name;
+            this.url = url;
+        }
 
         public String getName() {
             return name;

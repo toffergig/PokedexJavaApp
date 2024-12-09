@@ -1,6 +1,3 @@
-// File: PokemonDetailsActivity.java
-// Package: com.example.pokedexjavaapp
-
 package com.example.pokedexjavaapp;
 
 import android.graphics.Color;
@@ -9,6 +6,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -18,7 +16,6 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
 import com.example.pokedexjavaapp.api.PokemonApiService;
@@ -27,7 +24,6 @@ import com.example.pokedexjavaapp.helpers.RadarChartConfig;
 import com.example.pokedexjavaapp.helpers.RadarChartHelper;
 import com.example.pokedexjavaapp.models.PokemonDetails;
 import com.github.mikephil.charting.charts.RadarChart;
-import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +54,7 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         setContentView(R.layout.pokemon_details_activity);
         initializeViews();
         initializeHelpers();
+        setupActionBar();
         int pokemonId = getIntent().getIntExtra("pokemon_id", -1);
         if (pokemonId != -1) {
             fetchPokemonDetails(pokemonId);
@@ -80,6 +77,28 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         pokemonTypesLayout = findViewById(R.id.pokemon_types_layout); // Added
         pokemonAbilitiesLayout = findViewById(R.id.pokemon_abilities_layout); // Added
         baseStatsLayout = findViewById(R.id.base_stats_layout); // Added
+    }
+
+    /**
+     * Setup the app bar with a back button.
+     */
+    private void setupActionBar() {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Enable the back button
+            getSupportActionBar().setTitle("Pokémon Details");    // Set ActionBar title
+        }
+    }
+
+    /**
+     * Handle app bar item selection.
+     */
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) { // Check if the back button was pressed
+            getOnBackPressedDispatcher().onBackPressed(); // Trigger default back navigation
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -247,7 +266,7 @@ public class PokemonDetailsActivity extends AppCompatActivity {
             // Optionally, indicate if the ability is hidden
             if (abilityInfo.isHidden()) {
                 abilityTextView.setTypeface(null, Typeface.ITALIC);
-                abilityTextView.setText(abilityTextView.getText() + " (Hidden)");
+                abilityTextView.setText(String.format("%s (Hidden)", abilityTextView.getText()));
             }
 
             // Set layout parameters with margin
@@ -343,7 +362,7 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         String[] words = text.split(" ");
         StringBuilder capitalized = new StringBuilder();
         for (String word : words) {
-            if(word.length() > 0){
+            if(!word.isEmpty()){
                 capitalized.append(word.substring(0, 1).toUpperCase())
                         .append(word.substring(1))
                         .append(" ");

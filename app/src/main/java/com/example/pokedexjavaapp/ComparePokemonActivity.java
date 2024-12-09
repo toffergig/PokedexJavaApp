@@ -3,11 +3,15 @@
 
 package com.example.pokedexjavaapp;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
+import android.view.MenuItem;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+import androidx.appcompat.widget.Toolbar;
+
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -60,6 +64,7 @@ public class ComparePokemonActivity extends AppCompatActivity {
         initializeViews();
         initializeApiService();
         retrieveSelectedPokemonIds();
+        setupActionBar();
 
         if (selectedPokemonIds == null || selectedPokemonIds.isEmpty()) {
             // No Pokémon selected, show message and exit
@@ -73,6 +78,28 @@ public class ComparePokemonActivity extends AppCompatActivity {
         radarChartHelper = new RadarChartHelper(this, radarChart);
 
         fetchSelectedPokemonDetails();
+    }
+
+    /**
+     * Setup the app bar with a back button.
+     */
+    private void setupActionBar() {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // Enable the back button
+            getSupportActionBar().setTitle("Compare Pokémon");    // Set ActionBar title
+        }
+    }
+
+    /**
+     * Handle app bar item selection.
+     */
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home) { // Check if the back button was pressed
+            getOnBackPressedDispatcher().onBackPressed(); // Trigger default back navigation
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
@@ -105,7 +132,7 @@ public class ComparePokemonActivity extends AppCompatActivity {
     private void fetchSelectedPokemonDetails() {
 //        showLoadingIndicator(true);
         for (Integer id : selectedPokemonIds) {
-            apiService.getPokemonDetails(id).enqueue(new Callback<PokemonDetails>() {
+            apiService.getPokemonDetails(id).enqueue(new Callback<>() {
                 @Override
                 public void onResponse(@NonNull Call<PokemonDetails> call, @NonNull Response<PokemonDetails> response) {
                     requestsCompleted++;

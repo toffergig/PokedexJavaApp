@@ -1,10 +1,25 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
+
+    <!-- Base application theme -->
     <style name="Base.Theme.PokedexJavaApp" parent="Theme.Material3.DayNight">
-        <!-- Customize your dark theme here. -->
-        <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
         <item name="fontFamily">@font/font_family</item>
         <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="actionBarStyle">@color/colorPrimary</item>
+        <item name="actionBarStyle">@style/CustomActionBar</item>
+    </style>
+
+    <!-- Application Theme -->
+    <style name="Theme.PokedexJavaApp" parent="Base.Theme.PokedexJavaApp" />
+
+    <!-- Custom ActionBar Style -->
+    <style name="CustomActionBar" parent="Widget.AppCompat.ActionBar">
+        <item name="titleTextStyle">@style/ActionBarTitleText</item>
+        <item name="homeAsUpIndicator">@drawable/ic_back_arrow_white</item> <!-- Custom back arrow -->
+        <item name="background">@color/colorPrimary</item>
+    </style>
+
+    <!-- Custom ActionBar Title Style -->
+    <style name="ActionBarTitleText" parent="TextAppearance.AppCompat.Widget.ActionBar.Title">
+        <item name="android:textColor">#FFFFFF</item> <!-- Set text color to white -->
+        <item name="android:textSize">24sp</item>     <!-- Optional: Set text size -->
     </style>
 </resources>

@@ -22,6 +22,7 @@ import com.example.pokedexjavaapp.repository.PokemonRepository;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,7 +36,6 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView pokemonRecyclerView;
     private ProgressBar progressBar;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private SearchView searchView;
     private Button backToTopButton;
     private Button compareButton;
 
@@ -43,16 +43,15 @@ public class MainActivity extends AppCompatActivity {
     private PokemonAdapter pokemonAdapter;
     private PokemonRepository pokemonRepository;
     private EndlessRecyclerViewScrollListener paginationScrollListener;
-    private RecyclerView.OnScrollListener backToTopScrollListener;
 
     // State Variables
     private int offset = 0;
     private boolean isDataReady = false;
-    private List<PokemonEntity> allPokemons = new ArrayList<>();
+    private final List<PokemonEntity> allPokemons = new ArrayList<>();
 
     // Selection Mode Variables
     private boolean selectionMode = false;
-    private List<PokemonEntity> selectedPokemons = new ArrayList<>();
+    private final List<PokemonEntity> selectedPokemons = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -68,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
     private void initializeUIComponents() {
         progressBar = findViewById(R.id.progress_bar);
 
-        searchView = findViewById(R.id.search_view);
+        SearchView searchView = findViewById(R.id.search_view);
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -117,7 +116,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void addBackToTopScrollListener() {
-        backToTopScrollListener = new RecyclerView.OnScrollListener() {
+        RecyclerView.OnScrollListener backToTopScrollListener = new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
                 GridLayoutManager layoutManager = (GridLayoutManager) recyclerView.getLayoutManager();
@@ -228,7 +227,7 @@ public class MainActivity extends AppCompatActivity {
         // Remove pagination scroll listener
         pokemonRecyclerView.removeOnScrollListener(paginationScrollListener);
         // Re-initialize pagination scroll listener
-        paginationScrollListener = new EndlessRecyclerViewScrollListener((GridLayoutManager) pokemonRecyclerView.getLayoutManager()) {
+        paginationScrollListener = new EndlessRecyclerViewScrollListener((GridLayoutManager) Objects.requireNonNull(pokemonRecyclerView.getLayoutManager())) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 fetchPokemonData();
@@ -262,7 +261,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void reinitializePaginationListener() {
         pokemonRecyclerView.removeOnScrollListener(paginationScrollListener);
-        paginationScrollListener = new EndlessRecyclerViewScrollListener((GridLayoutManager) pokemonRecyclerView.getLayoutManager()) {
+        paginationScrollListener = new EndlessRecyclerViewScrollListener((GridLayoutManager) Objects.requireNonNull(pokemonRecyclerView.getLayoutManager())) {
             @Override
             public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
                 fetchPokemonData();
