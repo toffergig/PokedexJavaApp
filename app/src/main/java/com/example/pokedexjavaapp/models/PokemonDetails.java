@@ -53,11 +53,29 @@ public class PokemonDetails {
         }
     }
     public static class Sprites {
-        @SerializedName("front_default")
-        private String frontDefault;
+        @SerializedName("other")
+        private Other other;
 
-        public String getFrontDefault() {
-            return frontDefault;
+        public Other getOther() {
+            return other;
+        }
+
+        public static class Other {
+            @SerializedName("showdown")
+            private Showdown showdown;
+
+            public Showdown getShowdown() {
+                return showdown;
+            }
+
+            public static class Showdown {
+                @SerializedName("front_default")
+                private String frontDefault;
+
+                public String getFrontDefault() {
+                    return frontDefault;
+                }
+            }
         }
     }
 

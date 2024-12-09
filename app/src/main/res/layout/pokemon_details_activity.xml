@@ -106,15 +106,15 @@
         android:id="@+id/pokemon_types_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="24dp"
         android:background="#00FFFFFF"
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="8dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.738"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/types_label">
+        app:layout_constraintHorizontal_bias="0.047"
+        app:layout_constraintStart_toEndOf="@+id/pokemon_detail_id"
+        app:layout_constraintTop_toTopOf="@+id/pokemon_detail_image">
 
     </LinearLayout>
 
@@ -133,17 +133,19 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/image_name_barrier" />
 
+    <!-- New LinearLayout for Base Stats -->
+
     <TextView
         android:id="@+id/textView4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="76dp"
+        android:layout_marginTop="20dp"
         android:text="BASE STATS"
         android:textSize="18sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/pokemon_types_layout" />
+        app:layout_constraintTop_toBottomOf="@+id/pokemon_abilities_layout" />
 
     <com.github.mikephil.charting.charts.RadarChart
         android:id="@+id/radar_chart"
@@ -156,7 +158,6 @@
         app:layout_constraintTop_toBottomOf="@id/textView4"
         app:layout_constraintVertical_bias="0.0" />
 
-    <!-- New LinearLayout for Base Stats -->
     <LinearLayout
         android:id="@+id/base_stats_layout"
         android:layout_width="0dp"

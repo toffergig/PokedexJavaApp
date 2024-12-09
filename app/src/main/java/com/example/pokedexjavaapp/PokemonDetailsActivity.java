@@ -18,7 +18,9 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
+import com.bumptech.glide.Glide;
 import com.example.pokedexjavaapp.api.PokemonApiService;
 import com.example.pokedexjavaapp.api.RetrofitClient;
 import com.example.pokedexjavaapp.helpers.RadarChartConfig;
@@ -170,7 +172,7 @@ public class PokemonDetailsActivity extends AppCompatActivity {
 
             // Stat Value TextView
             TextView statValueTextView = new TextView(this);
-            statValueTextView.setText(String.valueOf(statValue));
+            statValueTextView.setText(String.format("%s/300", statValue));
             statValueTextView.setTextSize(16f);
             statValueTextView.setTypeface(null, Typeface.NORMAL);
             statValueTextView.setLayoutParams(new LinearLayout.LayoutParams(
@@ -188,6 +190,7 @@ public class PokemonDetailsActivity extends AppCompatActivity {
                     20));
             statProgressBar.setMax(255); // Pokémon base stats typically max out at 255
             statProgressBar.setProgress(statValue);
+//            statProgressBar.setBackgroundColor(ContextCompat.getColor(this, R.color.progress_bar_color));
           //  statProgressBar.setProgressTint(getTypeColor("progress_bar_color")); // Optional: Define a color in colors.xml
 
             // Add header and progress bar to the stat item layout
@@ -208,10 +211,11 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         String formattedId = String.format(Locale.getDefault(), "#%03d", details.getId());
         pokemonIdTextView.setText(formattedId);
         pokemonNameTextView.setText(capitalize(details.getName()));
-        String imageUrl = details.getSprites().getFrontDefault();
-        if (imageUrl != null && !imageUrl.isEmpty()) {
-            Picasso.get()
-                    .load(imageUrl)
+        String gifUrl = details.getSprites().getOther().getShowdown().getFrontDefault();
+        if (gifUrl != null && !gifUrl.isEmpty()) {
+            Glide.with(this)
+                    .asGif()
+                    .load(gifUrl)
                     .into(pokemonImageView);
         }
     }
