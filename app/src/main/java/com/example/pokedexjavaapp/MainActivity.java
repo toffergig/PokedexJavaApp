@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Constants
     private static final String TAG = "MainActivity";
-    private static final int PAGE_SIZE = 660;
+    private static final int PAGE_SIZE = 1000;
     private static final int GRID_COLUMN_COUNT = 2;
     private static final int MAX_SELECTION = 3;
 
@@ -309,13 +309,15 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void updateCompareButtonState() {
-            boolean hasSelection = !selectedPokemons.isEmpty();
-            compareButton.setEnabled(hasSelection);
+        boolean hasSelection = !selectedPokemons.isEmpty();
+        boolean hasEnoughSelection = selectedPokemons.size() >= 2; // Check for at least 2 selections
 
-            // If no Pokémon are selected, turn off selection mode
-            if (!hasSelection) {
-                selectionMode = false;
-            }
+        compareButton.setEnabled(hasSelection && hasEnoughSelection); // Enable only if both conditions are true
+
+        // If no Pokémon are selected, turn off selection mode
+        if (!hasSelection) {
+            selectionMode = false;
+        }
     }
 
     private void openPokemonDetails(PokemonEntity pokemon) {

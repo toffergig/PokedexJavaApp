@@ -44,6 +44,9 @@ dependencies {
     implementation (libs.recyclerview)
     implementation(libs.androidx.swiperefreshlayout)
     testImplementation(libs.junit)
+    testImplementation(libs.androidx.core)
+    testImplementation(libs.espresso.core)
+    testImplementation(libs.ext.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
     implementation (libs.picasso)
@@ -52,4 +55,7 @@ dependencies {
     implementation(libs.androidx.palette)
     implementation ("com.github.bumptech.glide:glide:4.15.1")
     annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1")
+    testImplementation("org.mockito:mockito-core:4.11.0")
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    testImplementation("org.robolectric:robolectric:4.14.1")
 }

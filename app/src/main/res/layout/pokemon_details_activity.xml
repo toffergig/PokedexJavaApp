@@ -39,7 +39,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="8dp"
         android:text=""
         android:textAlignment="center"
         android:textSize="18sp"
@@ -54,18 +54,19 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:maxLines="2"
+        android:layout_marginTop="36dp"
         android:ellipsize="end"
+        android:maxLines="2"
         android:text=""
         android:textAlignment="center"
         android:textSize="28sp"
         android:textStyle="bold"
+        app:layout_constrainedWidth="true"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toEndOf="@id/pokemon_detail_image"
-        app:layout_constraintTop_toBottomOf="@+id/pokemon_detail_id"
-        app:layout_constrainedWidth="true"
-        app:layout_constraintHorizontal_chainStyle="packed"/>
+        app:layout_constraintTop_toBottomOf="@+id/pokemon_detail_id" />
 
     <androidx.constraintlayout.widget.Barrier
         android:id="@+id/image_name_barrier"
@@ -102,23 +103,26 @@
             android:textStyle="bold" />
     </LinearLayout>
 
+    <!-- New LinearLayout for Base Stats -->
+
+    <!-- HEIGHT Value -->
+
     <LinearLayout
         android:id="@+id/pokemon_types_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
         android:background="#00FFFFFF"
         android:gravity="center"
         android:orientation="horizontal"
         android:padding="8dp"
+        app:layout_constraintBottom_toTopOf="@+id/pokemon_detail_name"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.047"
-        app:layout_constraintStart_toEndOf="@+id/pokemon_detail_id"
-        app:layout_constraintTop_toTopOf="@+id/pokemon_detail_image">
+        app:layout_constraintHorizontal_bias="0.07"
+        app:layout_constraintStart_toEndOf="@+id/pokemon_detail_image"
+        app:layout_constraintTop_toBottomOf="@+id/pokemon_detail_id"
+        app:layout_constraintVertical_bias="0.45">
 
     </LinearLayout>
-
-    <!-- New LinearLayout for Base Stats -->
 
     <TextView
         android:id="@+id/height_label"
@@ -135,18 +139,18 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/image_name_barrier" />
 
-    <!-- HEIGHT Value -->
     <TextView
         android:id="@+id/height_value"
         android:layout_width="wrap_content"
         android:layout_height="24dp"
-        android:text="1.7 m"
-    android:textSize="16sp"
-    android:textColor="#000000"
-    android:layout_marginStart="8dp"
-    app:layout_constraintStart_toEndOf="@id/height_label"
-    app:layout_constraintTop_toTopOf="@id/height_label"
-    app:layout_constraintBottom_toBottomOf="@id/height_label" />
+        android:layout_marginStart="16dp"
+        android:text=""
+        android:textColor="#000000"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="@id/height_label"
+        app:layout_constraintStart_toEndOf="@id/height_label"
+        app:layout_constraintTop_toTopOf="@id/height_label"
+        app:layout_constraintVertical_bias="0.0" />
 
     <TextView
         android:id="@+id/weight_label"
@@ -168,7 +172,7 @@
         android:id="@+id/weight_value"
         android:layout_width="wrap_content"
         android:layout_height="24dp"
-        android:text="70 kg"
+        android:text=""
     android:textSize="16sp"
     android:textColor="#000000"
     android:layout_marginStart="8dp"

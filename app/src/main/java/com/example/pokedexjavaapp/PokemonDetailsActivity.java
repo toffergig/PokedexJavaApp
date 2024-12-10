@@ -1,8 +1,12 @@
 package com.example.pokedexjavaapp;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
+import android.graphics.PorterDuff;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
@@ -16,6 +20,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.bumptech.glide.Glide;
 import com.example.pokedexjavaapp.api.PokemonApiService;
@@ -41,9 +46,9 @@ public class PokemonDetailsActivity extends AppCompatActivity {
     private TextView pokemonIdTextView;
     private RadarChart radarChart;
     private ProgressBar progressBar;
-    private LinearLayout pokemonTypesLayout; // Added
-    private LinearLayout pokemonAbilitiesLayout; // Added
-    private LinearLayout baseStatsLayout; // Added
+    private LinearLayout pokemonTypesLayout;
+    private LinearLayout pokemonAbilitiesLayout;
+    private LinearLayout baseStatsLayout;
 
     // RadarChart Helper
     private RadarChartHelper radarChartHelper;
@@ -254,12 +259,20 @@ public class PokemonDetailsActivity extends AppCompatActivity {
                     20));
             statProgressBar.setMax(255); // Pokémon base stats typically max out at 255
             statProgressBar.setProgress(statValue);
-//            statProgressBar.setBackgroundColor(ContextCompat.getColor(this, R.color.progress_bar_color));
-          //  statProgressBar.setProgressTint(getTypeColor("progress_bar_color")); // Optional: Define a color in colors.xml
+
+            LayerDrawable drawable = (LayerDrawable) statProgressBar.getProgressDrawable();
+
+            if (drawable != null) {
+                Drawable progressDrawable = drawable.findDrawableByLayerId(android.R.id.progress);
+                if (progressDrawable != null) {
+                    progressDrawable.setColorFilter(Color.parseColor("#7DA6DE"), PorterDuff.Mode.SRC_IN); // Change Color.RED to your desired color
+                }
+            }
 
             // Add header and progress bar to the stat item layout
             statItemLayout.addView(statHeaderLayout);
             statItemLayout.addView(statProgressBar);
+
 
             // Add the stat item layout to the base stats container
             baseStatsLayout.addView(statItemLayout);
@@ -426,10 +439,10 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         // Assuming you have defined a color named 'progress_bar_color' in colors.xml
         int colorResourceId = getResources().getIdentifier(typeName, "color", getPackageName());
         if (colorResourceId != 0) {
-            return getResources().getColor(colorResourceId);
+            return ContextCompat.getColor(this, colorResourceId);
         } else {
             // Default color if type not found
-            return getResources().getColor(R.color.default_card_background);
+            return ContextCompat.getColor(this, R.color.default_card_background);
         }
     }
 }

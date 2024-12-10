@@ -1,11 +1,11 @@
 package com.example.pokedexjavaapp.models;
 
 public class Pokemon {
-    private String name;
+    protected String name;
     private String url;
 
     // Transient fields
-    private int id;
+    protected int id;
     private String spriteURL;
 
     public String getName() {

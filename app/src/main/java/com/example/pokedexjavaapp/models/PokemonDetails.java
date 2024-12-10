@@ -4,11 +4,9 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class PokemonDetails {
+public class PokemonDetails extends Pokemon  {
 
     public PokemonDetails(int id, String name, int height, int weight, Sprites sprites, List<Stat> stats, List<TypeInfo> types, List<AbilityInfo> abilities) {
-        this.id = id;
-        this.name = name;
         this.height = height;
         this.weight = weight;
         this.sprites = sprites;
@@ -17,10 +15,9 @@ public class PokemonDetails {
         this.abilities = abilities;
     }
 
-    private final int id;
-    private final String name;
-    private final int height;
-    private final int weight;
+
+    private int height;
+    private int weight;
 
     @SerializedName("sprites")
     private Sprites sprites;

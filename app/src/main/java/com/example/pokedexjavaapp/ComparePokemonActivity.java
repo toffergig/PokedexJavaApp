@@ -4,11 +4,18 @@
 package com.example.pokedexjavaapp;
 
 import android.graphics.Color;
+import android.graphics.PorterDuff;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.MenuItem;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.widget.Toolbar;
 
@@ -170,6 +177,7 @@ public class ComparePokemonActivity extends AppCompatActivity {
             }
             sortPokemonByAverage(); // Sort Pokémon based on average base stats
             buildRadarChart();
+            displayBaseStats();
         }
     }
 
@@ -218,6 +226,104 @@ public class ComparePokemonActivity extends AppCompatActivity {
 
         // Build the RadarChart with the provided configuration
         radarChartHelper.buildRadarChart(fetchedDetails, config);
+    }
+
+    private void displayBaseStats() {
+        LinearLayout baseStatsLayout = findViewById(R.id.base_stats_layout);
+        baseStatsLayout.removeAllViews(); // Clear existing views
+
+        for (PokemonDetails pokemon : fetchedDetails) {
+            // Create a TextView for the Pokémon's name
+            TextView pokemonNameTextView = new TextView(this);
+            pokemonNameTextView.setText(capitalize(pokemon.getName()));
+            pokemonNameTextView.setTextSize(22);
+            pokemonNameTextView.setTextColor(Color.parseColor("#7DA6DE"));
+            pokemonNameTextView.setTypeface(null, Typeface.BOLD); // Make it bold
+            baseStatsLayout.addView(pokemonNameTextView);
+
+            for (PokemonDetails.Stat stat : pokemon.getStats()) {
+                // Create a vertical LinearLayout for each stat
+                LinearLayout statItemLayout = new LinearLayout(this);
+                statItemLayout.setOrientation(LinearLayout.VERTICAL);
+                statItemLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT));
+                statItemLayout.setPadding(0, 8, 0, 8);
+
+                // Create a horizontal LinearLayout for stat name and value
+                LinearLayout statHeaderLayout = new LinearLayout(this);
+                statHeaderLayout.setOrientation(LinearLayout.HORIZONTAL);
+                statHeaderLayout.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT));
+                statHeaderLayout.setGravity(Gravity.CENTER_VERTICAL);
+
+                // Stat Name TextView
+                TextView statNameTextView = new TextView(this); // Declare and initialize
+                statNameTextView.setText(capitalize(stat.getStat().getName().replace("-", " ")));
+                statNameTextView.setTextSize(16);
+                statNameTextView.setTypeface(null, Typeface.BOLD);
+                statNameTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                        0,
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        1f));
+
+                // Stat Value TextView
+                TextView statValueTextView = new TextView(this);
+                statValueTextView.setText(String.format("%s/300", stat.getBaseStat()));
+                statValueTextView.setTextSize(16);
+                statValueTextView.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.WRAP_CONTENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT));
+
+                // Create ProgressBar
+                ProgressBar statProgressBar = new ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); // Declare and initialize
+                statProgressBar.setLayoutParams(new LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        20));
+                statProgressBar.setMax(300);
+                statProgressBar.setProgress(stat.getBaseStat());
+
+                // Get the drawable of the progress bar
+                LayerDrawable drawable = (LayerDrawable) statProgressBar.getProgressDrawable();
+
+                // Find the progress layer and set its color
+                if (drawable != null) {
+                    Drawable progressDrawable = drawable.findDrawableByLayerId(android.R.id.progress);
+                    if (progressDrawable != null) {
+                        progressDrawable.setColorFilter(Color.parseColor("#7DA6DE"), PorterDuff.Mode.SRC_IN); // Change Color.RED to your desired color
+                    }
+                }
+
+                // Add views to the layout
+                statHeaderLayout.addView(statNameTextView);
+                statHeaderLayout.addView(statValueTextView);
+                statItemLayout.addView(statHeaderLayout);
+                statItemLayout.addView(statProgressBar);
+                baseStatsLayout.addView(statItemLayout);
+            }
+        }
+    }
+    /**
+     * Capitalizes the first letter of each word in a given string.
+     *
+     * @param text The input string.
+     * @return The capitalized string.
+     */
+    private String capitalize(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        String[] words = text.split(" ");
+        StringBuilder capitalized = new StringBuilder();
+        for (String word : words) {
+            if(!word.isEmpty()){
+                capitalized.append(word.substring(0, 1).toUpperCase())
+                        .append(word.substring(1))
+                        .append(" ");
+            }
+        }
+        return capitalized.toString().trim();
     }
 
 }
