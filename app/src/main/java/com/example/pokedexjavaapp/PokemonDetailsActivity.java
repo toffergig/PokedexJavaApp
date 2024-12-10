@@ -48,6 +48,10 @@ public class PokemonDetailsActivity extends AppCompatActivity {
     // RadarChart Helper
     private RadarChartHelper radarChartHelper;
 
+    // New UI Components for Measurements
+    private TextView heightValueTextView;
+    private TextView weightValueTextView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,6 +81,10 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         pokemonTypesLayout = findViewById(R.id.pokemon_types_layout); // Added
         pokemonAbilitiesLayout = findViewById(R.id.pokemon_abilities_layout); // Added
         baseStatsLayout = findViewById(R.id.base_stats_layout); // Added
+
+        // Initialize new TextViews for height and weight
+        heightValueTextView = findViewById(R.id.height_value);
+        weightValueTextView = findViewById(R.id.weight_value);
     }
 
     /**
@@ -148,6 +156,43 @@ public class PokemonDetailsActivity extends AppCompatActivity {
         displayPokemonAbilities(details.getAbilities());
         setupRadarChart(details);
         displayBaseStats(details.getStats()); // Added
+        displayPokemonMeasurements(details);
+    }
+
+    /**
+     * Displays the Pokémon's height and weight in the UI.
+     *
+     * @param details The PokémonDetails object containing height and weight.
+     */
+    private void displayPokemonMeasurements(PokemonDetails details) {
+        // Convert height from decimeters to meters
+        float heightInMeters = convertDecimetersToMeters(details.getHeight());
+        // Convert weight from hectograms to kilograms
+        float weightInKilograms = convertHectogramsToKilograms(details.getWeight());
+
+        // Set the converted values to the respective TextViews
+        heightValueTextView.setText(String.format(Locale.getDefault(), "%.1f m", heightInMeters));
+        weightValueTextView.setText(String.format(Locale.getDefault(), "%.1f kg", weightInKilograms));
+    }
+
+    /**
+     * Converts height from decimeters to meters.
+     *
+     * @param decimeters The height in decimeters.
+     * @return The height in meters.
+     */
+    private float convertDecimetersToMeters(int decimeters) {
+        return decimeters / 10.0f;
+    }
+
+    /**
+     * Converts weight from hectograms to kilograms.
+     *
+     * @param hectograms The weight in hectograms.
+     * @return The weight in kilograms.
+     */
+    private float convertHectogramsToKilograms(int hectograms) {
+        return hectograms / 10.0f;
     }
 
     /**
