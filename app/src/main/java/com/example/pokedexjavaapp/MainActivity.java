@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Constants
     private static final String TAG = "MainActivity";
-    private static final int PAGE_SIZE = 1000;
+    private static final int PAGE_SIZE = 20;
     private static final int GRID_COLUMN_COUNT = 2;
     private static final int MAX_SELECTION = 3;
 

@@ -29,6 +29,16 @@ public class PokemonDetails extends Pokemon  {
     @SerializedName("abilities")
     private List<AbilityInfo> abilities;
 
+    public PokemonDetails() {
+
+    }
+
+    public void setName(String pokemon1) {
+    }
+
+    public void setStats(List<Stat> stats1) {
+    }
+
     // Inner classes for nested JSON objects
     public static class AbilityInfo {
         private final Ability ability;
@@ -101,7 +111,7 @@ public class PokemonDetails extends Pokemon  {
         @SerializedName("base_stat")
         private int baseStat;
 
-        private final StatDetail stat;
+        private StatDetail stat;
 
         public Stat(StatDetail stat) {
             this.stat = stat;

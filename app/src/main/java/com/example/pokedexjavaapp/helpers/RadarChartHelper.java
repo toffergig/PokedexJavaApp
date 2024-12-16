@@ -85,7 +85,7 @@ public class RadarChartHelper {
      * @param yAxisMax   The maximum Y-axis value.
      * @param drawLabels Whether to draw Y-axis labels.
      */
-    private void configureChartAxes(List<String> statLabels, float yAxisMax, boolean drawLabels) {
+    public void configureChartAxes(List<String> statLabels, float yAxisMax, boolean drawLabels) {
         // Configure XAxis with stat labels
         XAxis xAxis = radarChart.getXAxis();
         xAxis.setValueFormatter(new IndexAxisValueFormatter(statLabels));
@@ -108,7 +108,7 @@ public class RadarChartHelper {
      *
      * @param showLegend Whether to display the legend.
      */
-    private void customizeLegend(boolean showLegend) {
+    public void customizeLegend(boolean showLegend) {
         Legend legend = radarChart.getLegend();
 
         legend.setEnabled(showLegend);
@@ -209,11 +209,11 @@ public class RadarChartHelper {
      * @param details The PokémonDetails object containing stats.
      * @return A list of RadarEntry objects representing the stats.
      */
-    private List<RadarEntry> convertStatsToEntries(PokemonDetails details) {
+    public List<RadarEntry> convertStatsToEntries(PokemonDetails details) {
         List<RadarEntry> entries = new ArrayList<>();
         if (details.getStats() == null || details.getStats().size() < 6) {
             // If stats are missing or incomplete, log an error and fill with zeros
-            Log.e(TAG, "Incomplete stats for Pokémon: " + details.getName());
+//            Log.e(TAG, "Incomplete stats for Pokémon: " + details.getName());
             for (int i = 0; i < 6; i++) {
                 entries.add(new RadarEntry(0f));
             }
@@ -235,7 +235,7 @@ public class RadarChartHelper {
      * @param color The color to tint the drawable.
      * @return A tinted Drawable, or null if the base drawable is not found.
      */
-    private Drawable getTintedDrawable(int color) {
+    public Drawable getTintedDrawable(int color) {
         // Obtain the base drawable
         Drawable baseDrawable = ContextCompat.getDrawable(context, R.drawable.circle_marker);
         if (baseDrawable == null) {
@@ -258,7 +258,7 @@ public class RadarChartHelper {
      * @param pokemonDetailsList List of fetched Pokémon details.
      * @return The maximum Y-axis value.
      */
-    private float calculateYAxisMaximum(List<PokemonDetails> pokemonDetailsList) {
+    public float calculateYAxisMaximum(List<PokemonDetails> pokemonDetailsList) {
         float maxStat = 0f;
         for (PokemonDetails details : pokemonDetailsList) {
             if (details.getStats() != null) {
@@ -278,7 +278,7 @@ public class RadarChartHelper {
      * @param text The input string.
      * @return The capitalized string.
      */
-    private String capitalize(String text) {
+    public String capitalize(String text) {
         if (text == null || text.isEmpty()) return "";
         return text.substring(0, 1).toUpperCase(Locale.ROOT) + text.substring(1);
     }
